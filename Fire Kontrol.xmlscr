@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="Fire Kontrol" Enabled="true" Priority="0" ScriptName="Fire Kontrol">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 23.10.2018 14:24:48
+function OnAfterSucceededPost(sender,eventArg)
+{
+   if(BaseObject != null &amp;&amp; BaseObject.CurrentRow != null &amp;&amp; BaseObject.CurrentRow.Row != null &amp;&amp; (BaseObject.CurrentRow.Row["ReceiptType"].ToString()=="120" || BaseObject.CurrentRow.Row["ReceiptType"].ToString()=="125"))
+   {
+      dRow = BaseObject.Data.Tables["IM_ReceiptItem"].Select("ShipmentWastageRate &gt; 5 or ShipmentWastageRate &lt; -5");
+   	  if(dRow != null &amp;&amp; dRow.Length &gt; 0)
+   	  {
+            sender.ShowMessage("Fire yüzdesi +/- 5 ten büyük satirlar mevcut. (scr:Fire Kontrol)");
+		 	return null;   	  
+   	  }
+   }
+}</ScriptText>
+</ScriptDefinition>

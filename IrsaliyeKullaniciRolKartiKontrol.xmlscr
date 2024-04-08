@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IrsaliyeKullaniciRolKartiKontrol" Enabled="true" Priority="0" ScriptName="IrsaliyeKullaniciRolKartiKontrol">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 19.02.2024 12:24:10 IrsaliyeKullaniciRolKartiKontrol
+
+
+function OnBeforePost(sender,ev)
+    {
+    
+        if(BaseObject == null 	
+        || BaseObject.CurrentRow == null 	
+        || BaseObject.CurrentRow.Row == null)
+            return null;
+            
+           rol_id = 0;
+            if(!System.String.IsNullOrWhiteSpace(BaseObject.ActiveSession.User.RoleId))
+             	rol_id = BaseObject.ActiveSession.User.RoleId;
+             
+             sb = new StringBuilder();
+         foreach(ia in BaseObject.Data.Tables["IM_ReceiptItem"].Select("UD_Kapali is not null and UD_Kapali=1"))
+            {
+	            if(rol_id !=1 &amp;&amp; rol_id!= 15)//rol_id çalışacak rol idler yazılacak
+	            {
+	            	sender.ShowMessage("Kullanı Rol Kartınız İşlem Yapmak İçin Uygun Değil");
+	            	ev.Cancel = true;
+	            	return null;
+	            }
+            }
+    }
+
+
+                             </ScriptText>
+</ScriptDefinition>

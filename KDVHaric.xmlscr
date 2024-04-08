@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KDVHaric" Enabled="true" Priority="0" ScriptName="KDVHaric">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 1.02.2023 09:43:43
+function OnAfterSucceededPost(sender, ev)
+{
+	if(BaseObject == null || BaseObject.CurrentRow == null || BaseObject.CurrentRow.Row == null  || BaseObject.CurrentRow.Row.IsNull("ReceiptType") ||  (Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])!=120 &amp;&amp;  Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])!=134 &amp;&amp; Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])!=125 &amp;&amp;  Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])!=138 &amp;&amp; Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])!=121))
+		return null;
+		aa=0m;
+		bb=0m;
+
+			foreach (ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null"))
+			{
+					if(Convert.ToInt32(ri["VatIncluded"])==1)
+					{if(!ri.IsNull("VatAmount") &amp;&amp; !ri.IsNull("VatBaseAmount"))
+					{query= "select (convert(nvarchar,FORMAT((isnull(VatBaseAmount,0)),\'###,###,###.0000\',\'de-de\'))) from IM_ReceiptItem where RecId="+ri["RecId"].ToString();
+				  	dt=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query); 
+				  	query2= "select (convert(nvarchar,FORMAT((isnull(VatAmount,0)),\'###,###,###.0000\',\'de-de\'))) from IM_ReceiptItem where RecId="+ri["RecId"].ToString();
+				  	dt2=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt2",query2); 
+						if(dt=!null &amp;&amp; dt2=!null)
+						{
+					aa=Convert.ToDecimal(dt.Rows[0][0])+Convert.ToDecimal(dt2.Rows[0][0]);
+					bb=bb+aa;
+					}
+					}
+					}
+
+				if(Convert.ToInt32(ri["VatIncluded"])==0 &amp;&amp; !ri.IsNull("VatBaseAmount"))
+				{
+			
+			query= "select (convert(nvarchar,FORMAT((isnull(VatBaseAmount,0)),\'###,###,###.0000\',\'de-de\'))) from IM_ReceiptItem where RecId="+ri["RecId"].ToString();
+				  	dt=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query); 
+						
+						if(dt=!null)
+						{
+					aa= Convert.ToDecimal(dt.Rows[0][0]);
+					bb=bb+aa;
+					}
+					}
+					
+				query4="select (convert(nvarchar,FORMAT((isnull(UnitPrice,0)),\'###,###,###.0000\',\'de-de\'))) from IM_ReceiptItem where RecId="+ri["RecId"].ToString();
+			  	dt4=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt4",query4); 
+MessageBox.Show(query4+query5);
+				query5="select (convert(nvarchar,FORMAT((isnull(VatRate,0)),\'###,###,###.0000\',\'de-de\'))) from IM_ReceiptItem where RecId="+ri["RecId"].ToString();
+			  	dt5=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt5",query5); 
+			  	
+			  	
+			  	
+				a=Convert.ToDecimal(dt4.Rows[0][0]) * Convert.ToDecimal(dt5.Rows[0][0])/100;
+				a=Convert.ToDecimal(dt4.Rows[0][0])-a;
+				
+				BaseObject.ShowMessage(a.ToString());
+
+			qqq="update IM_ReceiptItem set UD_EInvoiceItemExplanation="+a+" where RecId="+ri["RecId"].ToString();
+			UtilityFunctions.SqlCustomScalarQuery(BaseObject.Connection, null, qqq);
+			
+			if(ri.IsNull("Explanation") || ri["Explanation"].ToString()=="" || ri["Explanation"].ToString()==" ")
+			ri.SetField&lt;|String|&gt;("Explanation",".");
+			
+			}
+			qqq="update IM_ReceiptItem set UD_EInvoiceItemExplanation="+bb+" where RecId="+BaseObject.CurrentRow.Row["RecId"].ToString();
+			UtilityFunctions.SqlCustomScalarQuery(BaseObject.Connection, null, qqq);
+			
+		//	BaseObject.CurrentRow.Row.SetField&lt;|Decimal|&gt;("UD_EInvoiceExplanation",bb);
+
+
+}</ScriptText>
+</ScriptDefinition>

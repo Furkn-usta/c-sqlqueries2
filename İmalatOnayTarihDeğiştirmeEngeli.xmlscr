@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İmalatOnayTarihDeğiştirmeEngeli" Enabled="true" Priority="0" ScriptName="İmalatOnayTarihDeğiştirmeEngeli">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="TWorkOrderEN" />
+    <Event Enabled="true" ObjectName="TWorkOrderEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="TWorkOrderEN" />
+  </Events>
+  <Histories>
+    <History EditedBy="FurkanUsta" EntryDate="2023-04-07T00:00:00">
+      <Change>İmalat Onay alanı işaretlendikten sonra sadece recidsi 90 ve 1 olan kullanıcılar tarafından değiştirilebilir.
+Tik işaretlendiği zaman imalat tarihi alanına o günün tarihini otomatik olarak atar </Change>
+    </History>
+  </Histories>
+  <ScriptText>//Generated on 7.04.2023 09:05:07
+/*
+İmalat Onay alanı işaretlendikten sonra sadece recidsi 90 ve 1 olan kullanıcılar tarafından değiştirilebilir.
+Tik işaretlendiği zaman imalat tarihi alanına o günün tarihini otomatik olarak atar 
+*/
+function OnBeforePost(sender,eventArg)
+{
+	 if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("UD_CuttingApproval")
+    || BaseObject.CurrentRow.Row.IsNull("UD_Control2")
+    || BaseObject.CurrentRow.Row["UD_CuttingApproval"].ToString() == "False" )
+	    return null;
+	     date = DateTime.Now.ToLongDateString();
+		
+	     im_on = BaseObject.CurrentRow.Row["UD_CuttingApproval"].ToString();  
+	   	 im_on2 = BaseObject.CurrentRow.Row["UD_Control2"].ToString();  
+	   	   
+		    if(im_on=="True" &amp;&amp; im_on2 == "False")				 
+			BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("UD_imltOnayTar",date.ToString()); 	//BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("PlanDate",date.ToString());
+		
+			
+		
+		
+		if( BaseObject.CurrentRow.Row["UD_Control2"].ToString() == "True")
+			{
+			/*
+		if(BaseObject.ActiveSession.User.RecId == "1" || BaseObject.ActiveSession.User.RecId == "12")
+   				return null;
+   				*/
+   		if(BaseObject.ActiveSession.User.RecId == "1" || BaseObject.ActiveSession.User.RecId == "90")
+   				return null;
+   			
+    	
+				old_date="01.01.1900";
+				
+				if (BaseObject.CurrentRow.Row["UD_imltOnayTar", DataRowVersion.Original] != DBNull.Value)
+					old_date = Convert.ToDateTime(BaseObject.CurrentRow.Row["UD_imltOnayTar", DataRowVersion.Original]);
+		
+				new_date="01.01.1900";
+		
+				if (BaseObject.CurrentRow.Row["UD_imltOnayTar"] != DBNull.Value)
+					new_date = Convert.ToDateTime(BaseObject.CurrentRow.Row["UD_imltOnayTar"].ToString());
+			
+				if(old_date != new_date)
+				{
+				sender.ShowMessage("İmalat Onay Tarihi Sadece Yöneticiler Tarafından Değiştirilebilir.. {scr..İmalatOnayTarihDeğiştirmeEngeli}");
+				eventArg.Cancel=true;
+				return null;
+				}
+			}
+			
+		
+}
+
+function OnAfterSucceededPost(sender,eventArg){
+ if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("UD_CuttingApproval")
+    || BaseObject.CurrentRow.Row.IsNull("UD_Control2")
+    || BaseObject.CurrentRow.Row["UD_CuttingApproval"].ToString() == "False")
+    return null;
+    
+	     	im_on = BaseObject.CurrentRow.Row["UD_CuttingApproval"].ToString();  
+			    if(im_on=="True")
+			    {			
+					BaseObject.CurrentRow.Row.SetField&lt;|int|&gt;("UD_Control2",1); 	
+					query ="update MA_WorkOrder set UD_Control2=1 where RecId="+Convert.ToInt32(BaseObject.CurrentRow.Row["RecId"]);
+					UtilityFunctions.SqlCustomScalarQuery(BaseObject.Connection,null,query);
+   					
+				}
+		
+}
+</ScriptText>
+</ScriptDefinition>

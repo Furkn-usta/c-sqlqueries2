@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="GTIPNoTasima" Enabled="true" Priority="0" ScriptName="GTIPNoTasima">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 27.01.2023 16:39:31
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null || BaseObject.CurrentRow == null ||BaseObject.CurrentRow.Row == null || BaseObject.CurrentRow.Row.IsNull("CurrentAccountId")/* || Convert.ToIn32(BaseObject.CurrentRow.Row["CurrentAccountId"])!=0*/ || Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])!=120 )
+		return null;
+		
+		
+				
+	foreach (ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null"))
+	{
+	if(!ri.IsNull("CtspId"))
+	{
+	query="	Select CtspCode from MD_Ctsp where RecId="+ri["CtspId"].ToString();
+	dt=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query); 
+	 if(dt.Rows[0][0].ToString!=null || dt.Rows.Count&gt;0)
+   	ri.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation",dt.Rows[0][0].ToString());
+	
+	}
+	}
+		
+		
+}</ScriptText>
+</ScriptDefinition>

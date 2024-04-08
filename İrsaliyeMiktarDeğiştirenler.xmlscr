@@ -1,0 +1,100 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyeMiktarDeğiştirenler" Enabled="true" Priority="0" ScriptName="İrsaliyeMiktarDeğiştirenler">
+  <Events>
+    <Event Enabled="true" ObjectName="InvntoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>function OnBeforePost(sender,eventArg){
+    if(BaseObject != null 
+       &amp;&amp; BaseObject.CurrentRow != null 
+       &amp;&amp; BaseObject.CurrentRow.Row != null 
+       &amp;&amp; BaseObject.CurrentRow.Row.RowState!=DataRowState.Deleted 
+       &amp;&amp; BaseObject.CurrentRow.Row.RowState!=DataRowState.Detached 
+       &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("ReceiptType") 
+       &amp;&amp; (Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"])==120 
+       || Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"])==125 
+       || Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"])==6 
+       || Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"])==1)){
+        sb=new StringBuilder();
+        l_bool=false;
+        taskm=BaseObject.Container.Resolve&lt;|TaskMessageService|&gt;("TaskMessageService");
+        sb.AppendLine("&lt;!DOCTYPE html&gt;");
+		sb.AppendLine("&lt;html&gt;");
+		sb.AppendLine("&lt;head&gt;");
+		sb.AppendLine("&lt;meta charset= \"utf-8\"&gt;");
+		sb.AppendLine("&lt;style&gt;");
+		sb.AppendLine("body {background-color: #FFFFFF;font-family:\"Courier New\", Courier, monospace;font-size: 11px;color: #666666;}");
+		sb.AppendLine("hr {height: 1px;color: #666666;background-color: #FFFFFF;border-bottom: 1px solid #666666;}");
+		sb.AppendLine("table{border-spacing: 0px; border-collapse: collapse;} ");
+		sb.AppendLine("&lt;/style&gt;");
+		sb.AppendLine("&lt;/head&gt;");
+		sb.AppendLine("&lt;body&gt;");
+		l_fistipi=String.Empty;
+		if(Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"])==120)
+		    l_fistipi="120-Toptan Satiş İrsaliyesi";
+		else if(Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"])==125)
+		    l_fistipi="125-Fasona Çikiş İrsaliyesi";
+		else if(Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"])==6)
+		    l_fistipi="6-Fasona Giriş İrsaliyesi";
+		else if(Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"])==1)
+		    l_fistipi="1-Mal Alim İrsaliyesi";
+	    sb.AppendLine("&lt;table border=\"1\" align=\"left\"&gt;&lt;tr&gt;&lt;th colspan=\"6\" style=\"text-align:left;\"&gt;Düzenleyen : "+BaseObject.ActiveSession.User.UserCode+" - "+BaseObject.ActiveSession.User.UserName+"&lt;/th&gt;&lt;/tr&gt; ");
+		sb.AppendLine("&lt;tr&gt;&lt;th colspan=\"6\" style=\"text-align:left;\"&gt;Fiş Tipi : "+l_fistipi+"&lt;/th&gt;&lt;/tr&gt;");
+		sb.AppendLine("&lt;tr&gt;&lt;th colspan=\"6\" style=\"text-align:left;\"&gt;Değiştiren : "+BaseObject.CurrentRow.Row["ReceiptNo"].ToString()+"&lt;/th&gt;&lt;/tr&gt;");
+		sb.AppendLine("&lt;tr&gt;&lt;th rowspan=\"2\"&gt;Malzeme&lt;/th&gt;&lt;th rowspan=\"2\"&gt;Açiklama&lt;/th&gt;&lt;th colspan=\"2\"&gt;Brüt Miktar&lt;/th&gt;&lt;th colspan=\"2\"&gt;Net Miktar&lt;/th&gt;&lt;/tr&gt;");
+		sb.AppendLine("&lt;tr&gt;&lt;th&gt;Eski Değer&lt;/th&gt;&lt;th&gt;Yeni Değer&lt;/th&gt;&lt;th&gt;Eski Değer&lt;/th&gt;&lt;th&gt;Yeni Değer&lt;/th&gt;&lt;/tr&gt;");	 
+	    foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select("InventoryId is not null")){
+            if(dr.RowState!=DataRowState.Deleted &amp;&amp; dr.RowState!=DataRowState.Detached){
+                rowVersion=dr.HasVersion(DataRowVersion.Original);
+                l_new_grosqty=0m;l_old_grossqty=0m;
+                l_new_newqty=0m;l_old_netqty=0m;
+                l_inventory=String.Empty;
+			    l_explanation=String.Empty;
+                if(dr.RowState==DataRowState.Modified
+                   &amp;&amp; rowVersion==true 
+                   &amp;&amp; ((dr["GrossQuantity",DataRowVersion.Original]!=dr["GrossQuantity",DataRowVersion.Current])
+                      || (dr["Quantity",DataRowVersion.Original]!=dr["Quantity",DataRowVersion.Current])) ){
+                    if(!dr.IsNull("GrossQuantity")){
+                        l_new_grosqty=Convert.ToDecimal(dr["GrossQuantity"]);
+                        l_old_grossqty=Convert.ToDecimal(dr["GrossQuantity"]);  
+                    }  
+                    if(dr["GrossQuantity",DataRowVersion.Original]!=dr["GrossQuantity",DataRowVersion.Current]){
+                        l_new_grosqty=Convert.ToDecimal(dr["GrossQuantity",DataRowVersion.Current]);
+                        l_old_grossqty=Convert.ToDecimal(dr["GrossQuantity",DataRowVersion.Original]); 
+                    }
+                    if(!dr.IsNull("Quantity")){
+                        l_new_newqty=Convert.ToDecimal(dr["Quantity"]);
+                        l_old_netqty=Convert.ToDecimal(dr["Quantity"]);  
+                    }
+                    if(dr["Quantity",DataRowVersion.Original]!=dr["Quantity",DataRowVersion.Current]){
+                        l_new_newqty=Convert.ToDecimal(dr["Quantity",DataRowVersion.Current]);
+                        l_old_netqty=Convert.ToDecimal(dr["Quantity",DataRowVersion.Original]);
+                    }
+                    if(!dr.IsNull("InventoryCode"))
+		                l_inventory=dr["InventoryCode"].ToString();
+		            if(!dr.IsNull("InventoryName"))
+		                l_inventory+=" - "+dr["InventoryName"].ToString();
+		            if(!dr.IsNull("Explanation"))
+		                l_explanation=dr["Explanation"].ToString();
+                    
+                    sb.AppendLine("&lt;tr&gt;&lt;td&gt;"+l_inventory+"&lt;/td&gt;");
+                    sb.AppendLine("&lt;td&gt;"+l_explanation+"&lt;/td&gt;");
+                
+                    sb.AppendLine("&lt;td style=\"text-align:right;\"&gt;"+l_old_grossqty.ToString("0.00")+"&lt;/td&gt;");
+                    sb.AppendLine("&lt;td style=\"text-align:right;\"&gt;"+l_new_grosqty.ToString("0.00")+"&lt;/td&gt;");
+                    sb.AppendLine("&lt;td style=\"text-align:right;\"&gt;"+l_old_netqty.ToString("0.00")+"&lt;/td&gt;");
+                    sb.AppendLine("&lt;td style=\"text-align:right;\"&gt;"+l_new_newqty.ToString("0.00")+"&lt;/td&gt;&lt;/tr&gt;");
+                    l_bool=true;
+                } 
+	        }
+	    }		   
+		sb.AppendLine("&lt;/body&gt; ");
+		sb.AppendLine("&lt;/html&gt; ");	
+		if(l_bool){	    
+	        taskm.SendEmail("metin@senovatekstil.com",BaseObject.CurrentRow.Row["ReceiptNo"].ToString()+" Nolu İrsaliyenin Miktari Değiştirildi.",sb.ToString());
+	        //sender.ShowMessage(sb.ToString());
+	    }
+    }
+}</ScriptText>
+</ScriptDefinition>

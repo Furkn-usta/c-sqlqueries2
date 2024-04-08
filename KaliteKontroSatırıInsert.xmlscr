@@ -1,0 +1,155 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KaliteKontroSatiriInsert" Enabled="true" Priority="0" ScriptName="KaliteKontroSatiriInsert">
+  <Events>
+    <Event Enabled="true" ObjectName="WorkOrderProductionEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="WorkOrderProductionEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 13.09.2023 10:19:38
+
+function OnAfterSucceededPost(sender, ev)
+{
+	if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+	|| Convert.ToInt32(BaseObject.ActiveSession.Company.RecId)!=1)
+    		return null;
+		
+			foreach(ri in BaseObject.Data.Tables["MA_WorkOrderProduction"].Select("ProcessId=20"))
+			{
+			if(Convert.ToDecimal(ri["UD_AnaPartiKopyalama"])==1)
+			{
+		tmr_processId=0m;
+		tmr_StartEmployeeId=0m;
+		tmr_EmployeeId=0m;
+		tmr_RouteItemId=0m;
+		tmr_ResourceId=0m;
+		tmr_StartProductionDate="";
+		tmr_StartProductionTime="";
+		tmr_StartQuantitiy=0m;
+		tmr_StartPackageQuantity=0m;
+		tmr_Price=0m;
+		tmr_Quantitiy=0m;
+		tmr_PackageQuantity=0m;
+		tmr_Duration=0m;
+		tmr_Explantion="";
+		tmr_OrderItemOrderNo=0m;
+		tmr_OperationItemOrderNo=0m;
+		tmr_ShiftNo=0m;
+		tmr_WrapNo=0m;
+		tmr_RollNo=0m;
+		tmr_PartyNo=0m;
+		tmr_IWidth=0m;
+		tmr_IWeight=0m;
+		tmr_Width=0m;
+		tmr_Weight=0m;
+		tmr_IsRepair=0m;
+		tmr_Addition=0m;
+		tmr_InsertedAt="";
+		tmr_InsertBy= Convert.ToInt32(BaseObject.ActiveSession.Company.RecId);
+		if(!ri.IsNull("ProcessId"))
+			tmr_processId=Convert.ToInt64(ri["ProcessId"]);
+		if(!ri.IsNull("StartEmployeeId"))
+		    tmr_StartEmployeeId=Convert.ToInt64(ri["StartEmployeeId"]);
+		if(!ri.IsNull("EmployeeId"))
+		    tmr_EmployeeId=Convert.ToInt64(ri["EmployeeId"]);
+		if(!ri.IsNull("RouteItemId"))
+		    tmr_RouteItemId=Convert.ToInt64(ri["RouteItemId"]);
+		if(!ri.IsNull("ResourceId"))
+		    tmr_ResourceId=Convert.ToInt64(ri["ResourceId"]);
+		if(!ri.IsNull("StartProductionDate"))
+		    tmr_StartProductionDate=(ri["StartProductionDate"]);
+		if(!ri.IsNull("StartProductionTime"))
+		    tmr_StartProductionTime=(ri["StartProductionTime"]);
+		if(!ri.IsNull("StartQuantity"))
+		    tmr_StartQuantitiy=Convert.ToDecimal(ri["StartQuantity"]);
+		if(!ri.IsNull("StartPackageQuantity"))
+		    tmr_StartPackageQuantity=Convert.ToDecimal(ri["StartPackageQuantity"]);
+		if(!ri.IsNull("UnitPrice"))
+		    tmr_Price=Convert.ToDecimal(ri["UnitPrice"]);
+		if(!ri.IsNull("Quantity"))
+		    tmr_Quantitiy=Convert.ToDecimal(ri["Quantity"]);
+		if(!ri.IsNull("PackageQuantity"))
+		    tmr_PackageQuantity=Convert.ToDecimal(ri["PackageQuantity"]);
+		if(!ri.IsNull("Explanation"))
+		    tmr_Explantion=ri["Explanation"].ToString();
+		if(!ri.IsNull("ShiftNo"))	
+		  tmr_ShiftNo=Convert.ToDecimal(ri["ShiftNo"]);
+		if(!ri.IsNull("WarpNo"))	
+		  tmr_WrapNo=Convert.ToDecimal(ri["WarpNo"]);
+		if(!ri.IsNull("RollNo"))	
+		  tmr_RollNo=Convert.ToDecimal(ri["RollNo"]);
+	 	 if(!ri.IsNull("PartyNo"))	
+		  tmr_PartyNo=Cri["PartyNo"];
+ 		if(!ri.IsNull("IWidth"))	
+		  tmr_IWidth=Convert.ToDecimal(ri["IWidth"]);
+		  if(!ri.IsNull("IWeight"))	
+		  tmr_IWeight=Convert.ToDecimal(ri["IWeight"]);
+		if(!ri.IsNull("Width"))	
+		  tmr_Width=Convert.ToDecimal(ri["Width"]);
+		  if(!ri.IsNull("Weight"))	
+		  tmr_Weight=Convert.ToDecimal(ri["Weight"]);
+		  if(!ri.IsNull("IsRepair"))	
+		  tmr_IsRepair=Convert.ToDecimal(ri["IsRepair"]);
+		  if(!ri.IsNull("IsAddition"))	
+		  tmr_Addition=Convert.ToDecimal(ri["IsAddition"]);
+		  if(!ri.IsNull("Duration"))	
+		  tmr_Duration=Convert.ToDecimal(ri["Duration"]);
+		  
+
+		query="select ParentId,woi.ItemOrderNo from MA_WorkOrderProduction wop with (nolock) ";
+		query+="left join MA_WorkOrderItem woi with (nolock) on woi.RecId=wop.WorkOrderItemId ";
+		query+="left join MA_WorkOrder wo with (nolock) on wo.RecId=woi.WorkOrderId ";
+		query+="where wo.WorkOrderType=10  AND wop.RecId= "+ri["RecId"].ToString() +"  ";
+		dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query);	
+		
+		if(dt.Rows[0][0]!=null &amp;&amp; dt.Rows[0][1]!=null )
+			{	
+		item=	" select top 1 isnull(wop.WorkOrderItemOrderNo+1,0),isnull(wop.OperationItemOrderNo+1,0) from MA_WorkOrder wo with (nolock) ";
+		item+=	" left join  MA_WorkOrderItem woi with (nolock)   on woi.WorkOrderId=wo.RecId" ;
+		item+=" left join MA_WorkOrderProduction wop with (nolock)   on wop.WorkOrderItemId=woi.RecId" ;
+		item+="	 where wo.WorkOrderType=10 and wo.RecId=\'"+dt.Rows[0][0].ToString()+"\' order by wop.WorkOrderItemOrderNo desc " ; 
+		dtitem = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dtitem",item);	
+			if(dtitem.Rows[0][0]!=null &amp;&amp; dtitem.Rows[0][1]!=null )
+				{   tmr_OrderItemOrderNo= Convert.ToDecimal(dtitem.Rows[0][0]);
+					tmr_OperationItemOrderNo= Convert.ToDecimal(dtitem.Rows[0][1]);
+				}
+		query2="	select woi.RecId from MA_WorkOrder wo with (nolock)  left join  MA_WorkOrderItem woi with (nolock)   on woi.WorkOrderId=wo.RecId";
+		query2+=	"	where wo.WorkOrderType=10 and  wo.RecId=\'"+dt.Rows[0][0].ToString()+"\' and woi.ItemOrderNo="+dt.Rows[0][1].ToString();
+	
+			dt2 = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt2",query2);
+			if(dt2.Rows[0][0]!=null)
+		{ 		tmr_quantity=" select woi.Quantity from MA_WorkOrderItem woi with (nolock)";
+				tmr_quantity+=" left join MA_WorkOrder wo with (nolock) on wo.RecId=woi.WorkOrderId ";
+				tmr_quantity+=" where woi.RecId= "+ri["WorkOrderItemId"];
+				
+				tmr_quantitydt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "tmr_quantitydt",tmr_quantity);
+				quantity=" select woi.Quantity from MA_WorkOrderItem woi with (nolock)";
+				quantity+=" left join MA_WorkOrder wo with (nolock) on wo.RecId=woi.WorkOrderId ";
+				quantity+=" where woi.RecId= "+dt2.Rows[0][0].ToString();
+				quantitydt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "quantitydt",quantity);
+
+
+				
+						insert="insert into MA_WorkOrderProduction (WorkOrderItemId,ProductionType,ProductionSubType,ProcessId,StartEmployeeId,EmployeeId,ResourceId,RouteItemId,InOut,InOutType,InOutSubType,CTextSubNo,SourceType,StartProductionDate,";
+						insert+= " StartProductionTime,StartQuantity,StartPackageQuantity,ProductionDate,UnitPrice,Quantity,PackageQuantity,Duration,Explanation,WorkOrderItemOrderNo,OperationItemOrderNo,";
+						insert+="ShiftNo,WarpNo,RollNo,PartyNo,IWidth,IWeight,Width,Weight,IsRepair,IsAddition,InsertedAt,InsertedBy,UD_AnaPartiKopyalama) values (\'"+dt2.Rows[0][0].ToString()+"\',0,0,\'"+tmr_processId+"\',";
+						insert+=" \'"+tmr_StartEmployeeId+"\',\'"+tmr_EmployeeId+"\',\'"+tmr_ResourceId+"\',\'"+tmr_RouteItemId+"\',0,0,0,0,0,GETDATE(),GETDATE(),\'"+tmr_StartQuantitiy.ToString().Replace(",",".")+"\',";
+						insert+=" \'"+tmr_StartPackageQuantity.ToString().Replace(",",".")+"\',GETDATE(),\'"+tmr_Price.ToString().Replace(",",".")+"\',\'"+tmr_Quantitiy.ToString().Replace(",",".")+"\',\'"+tmr_PackageQuantity.ToString().Replace(",",".")+"\',\'"+tmr_Duration.ToString().Replace(",",".")+"\',\'"+tmr_Explantion+"\', ";
+						insert+=" \'"+tmr_OrderItemOrderNo+"\', \'"+tmr_OperationItemOrderNo+"\', \'"+tmr_ShiftNo.ToString().Replace(",",".")+"\',\'"+tmr_WrapNo.ToString().Replace(",",".")+"\',\'"+tmr_RollNo.ToString().Replace(",",".")+"\',\'"+tmr_PartyNo+"\', \'"+tmr_IWidth.ToString().Replace(",",".")+"\',";
+						insert+=" \'"+tmr_IWeight.ToString().Replace(",",".")+"\',\'"+tmr_Width.ToString().Replace(",",".")+"\',\'"+tmr_Weight.ToString().Replace(",",".")+"\',\'"+tmr_IsRepair+"\',\'"+tmr_Addition+"\', GETDATE(),\'"+Convert.ToInt32(BaseObject.ActiveSession.User.RecId)+"\' , 0)";
+				
+						insertdt =UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "insertdt",insert);
+						update="update MA_WorkOrderProduction set UD_AnaPartiKopyalama=0 where RecId="+ri["RecId"];
+						 dt_updateSQL_ =UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_updateSQL_",update);
+							MessageBox.Show("Başarili");
+             		  
+				}
+			}
+			
+		} 
+	}
+
+		
+}</ScriptText>
+</ScriptDefinition>

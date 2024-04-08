@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KumasKartiSertifikaZorunluAlan" Enabled="false" Priority="0" ScriptName="KumasKartiSertifikaZorunluAlan">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 7.03.2024 13:45:06 KumasKartiSertifikaZorunluAlan
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null 
+	|| BaseObject.CurrentRow.Row.IsNull("InventoryType")
+	|| Convert.ToInt32(BaseObject.CurrentRow.Row["InventoryType"]) != 6)
+		return null;
+		if(BaseObject.CurrentRow.Row.IsNull("UD_Sertifika") || BaseObject.CurrentRow.Row["UD_Sertifika"].ToString() == "")
+        {
+            sender.ShowMessage("Sertifika Eksik Tanımlanamaz {..scr:KumasKartiSertifikaZorunluAlan}");
+            ev.Cancel = true;
+            return null;
+        }
+		if(!BaseObject.CurrentRow.Row.IsNull("FComposition") &amp;&amp; BaseObject.CurrentRow.Row["FComposition"].ToString().Trim() != "")
+        {
+            sertf_ = BaseObject.CurrentRow.Row["UD_Sertifika"].ToString();
+			BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("FComposition",BaseObject.CurrentRow.Row["FComposition"].ToString() +" "+ sertf_.ToString());
+        }
+}
+
+ 
+ </ScriptText>
+</ScriptDefinition>

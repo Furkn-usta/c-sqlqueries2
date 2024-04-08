@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İplikRecetesi" Enabled="true" Priority="0" ScriptName="İplikRecetesi">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 3/30/2021 2:10:37 PM
+l_activity = new Dictionary&lt;|string, decimal|&gt;();
+function OnBeforePost(sender,eventArg){
+    if(BaseObject!=null &amp;&amp; BaseObject.CurrentRow!=null &amp;&amp; BaseObject.CurrentRow.Row!=null ){
+       
+       l_array = new List&lt;|String|&gt;();
+       l_master_weight=0m;
+       if(!BaseObject.CurrentRow.Row.IsNull("MasterWeight") &amp;&amp; Convert.ToDecimal(BaseObject.CurrentRow.Row["MasterWeight"])&gt;0m)
+            l_master_weight=Convert.ToDecimal(BaseObject.CurrentRow.Row["MasterWeight"]);
+       
+       
+       foreach(dr in BaseObject.Data.Tables["MA_RecipeItem"].Select("ItemType=5 and InventoryId is not null and isnull(UD_Miktar,0)&gt;0")){
+		    str="select UD_IC1 IC1,UD_IC2 IC2,UD_IC3 IC3,UD_İplikOran1 IO1,UD_İplikOran2 IO2,UD_İplikOran3 IO3 from IM_Item i with(nolock) where i.RecId ="+Convert.ToInt64(dr["InventoryId"]);
+		    dt=UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt", str);
+			if(dt!=null &amp;&amp; dt.Rows.Count&gt;0){
+		 
+			   if(!dt.Rows[0].IsNull("IC1") &amp;&amp; dt.Rows[0]["IC1"].ToString().Trim()!=String.Empty &amp;&amp; dt.Rows[0]["IC1"].ToString().Trim()!="01"){
+			       l_qty=0m;
+			       if(dt.Rows[0]["IO1"].ToString().Trim()!=String.Empty &amp;&amp; Convert.ToDecimal(dt.Rows[0]["IO1"])&gt;0m &amp;&amp; l_master_weight&gt;0m ) 
+			           l_qty=Convert.ToDecimal(dt.Rows[0]["IO1"])*Convert.ToDecimal(dr["UD_Miktar"])/l_master_weight;
+			       SetPlannedQuantity(dt.Rows[0]["IC1"].ToString(),l_qty);
+			       if(!l_array.Contains(dt.Rows[0]["IC1"].ToString()))
+			           l_array.Add(dt.Rows[0]["IC1"].ToString());
+			   }
+			   if(!dt.Rows[0].IsNull("IC2") &amp;&amp; dt.Rows[0]["IC2"].ToString().Trim()!=String.Empty &amp;&amp; dt.Rows[0]["IC2"].ToString().Trim()!="01"){
+			       l_qty=0m;
+			       if(dt.Rows[0]["IO2"].ToString().Trim()!=String.Empty &amp;&amp; Convert.ToDecimal(dt.Rows[0]["IO2"])&gt;0m &amp;&amp; l_master_weight&gt;0m ) 
+			           l_qty=Convert.ToDecimal(dt.Rows[0]["IO2"])*Convert.ToDecimal(dr["UD_Miktar"])/l_master_weight;
+			       SetPlannedQuantity(dt.Rows[0]["IC2"].ToString(),l_qty);
+			       if(!l_array.Contains(dt.Rows[0]["IC2"].ToString()))
+			           l_array.Add(dt.Rows[0]["IC2"].ToString());
+			   }
+			   if(!dt.Rows[0].IsNull("IC3") &amp;&amp; dt.Rows[0]["IC3"].ToString().Trim()!=String.Empty &amp;&amp; dt.Rows[0]["IC3"].ToString().Trim()!="01"){
+			       l_qty=0m;
+			       if(dt.Rows[0]["IO3"].ToString().Trim()!=String.Empty &amp;&amp; Convert.ToDecimal(dt.Rows[0]["IO3"])&gt;0m &amp;&amp; l_master_weight&gt;0m ) 
+			           l_qty=Convert.ToDecimal(dt.Rows[0]["IO3"])*Convert.ToDecimal(dr["UD_Miktar"])/l_master_weight;
+			       SetPlannedQuantity(dt.Rows[0]["IC3"].ToString(),l_qty);
+			       if(!l_array.Contains(dt.Rows[0]["IC3"].ToString()))
+			           l_array.Add(dt.Rows[0]["IC3"].ToString());
+			   }
+			}
+        }
+  
+        l_str=String.Empty;
+        foreach(l in l_array){
+           if(l_activity.ContainsKey(l)){
+                str="select Explanation from MD_DataFieldValue with (nolock) where FieldId in (86,87,88) and CodeValue=\'"+l+"\'";
+		        dt=UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt", str);
+			    if(dt!=null &amp;&amp; dt.Rows.Count&gt;0 &amp;&amp; !dt.Rows[0].IsNull("Explanation")){
+		            l_str+=dt.Rows[0]["Explanation"].ToString()+" : "+Convert.ToString(System.Math.Round(Convert.ToDecimal(l_activity[l]),2)) +Environment.NewLine;
+                }
+           }   
+        }
+        BaseObject.CurrentRow.Row.SetField&lt;|String|&gt;("UD_IplikKarisim",l_str);
+    }
+} 
+
+function SetPlannedQuantity(activityKey,qty){       
+      if(!l_activity.ContainsKey(activityKey)){
+        l_activity.Add(activityKey,qty);
+      }
+      else
+        l_activity[activityKey]+=qty;
+} </ScriptText>
+</ScriptDefinition>

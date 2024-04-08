@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KumasDepoCikisKontrol" Enabled="true" Priority="0" ScriptName="KumasDepoCikisKontrol">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories>
+    <History EditedBy="FurkanUsta" EntryDate="2023-03-09T00:00:00">
+      <Change>140 üretim çıkış fişinde sadece  RecIdsi 7 olan şirkette 35 recid'li depo seçilirse kayıt yapmaya izin veren script çalışması.</Change>
+    </History>
+  </Histories>
+  <ScriptText>//Generated on 9.03.2023 13:58:00
+/*
+140 üretim çıkış fişinde sadece  RecIdsi 7 olan şirkette 35 recid'li depo seçilirse kayıt yapmaya izin veren script çalışması.
+*/
+function OnBeforePost(sender,ev)
+{	
+if (BaseObject != null 
+	&amp;&amp; BaseObject.CurrentRow != null 
+	&amp;&amp; BaseObject.CurrentRow.Row != null 
+	&amp;&amp; !BaseObject.CurrentRow.Row.IsNull("OutWarehouseId")
+    &amp;&amp; Convert.ToInt32(BaseObject.ActiveSession.Company.RecId) == 7
+	&amp;&amp; Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"]) == 140)
+	{
+	
+		if(Convert.ToInt32(BaseObject.CurrentRow.Row["OutWarehouseId"])== 35)
+		return null;
+		
+		sender.ShowMessage("140 Üretim Çıkış Fişi Sadece Üretim Kumaş Depoya Çıkış Yapabilir! {scr:KumasDepoCikisKontrol}");
+		ev.Cancel=true;
+		return null;
+		
+	}
+}</ScriptText>
+</ScriptDefinition>

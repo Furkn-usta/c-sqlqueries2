@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IngilizceAdıKoduVeBuyukHarfCevirme" Enabled="true" Priority="0" ScriptName="IngilizceAdıKoduVeBuyukHarfCevirme">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryEN" />
+    <Event Enabled="true" EventName="AfterPost" FunctionName="OnIAfterPost" ObjectName="InventoryEN" />
+    <Event Enabled="true" EventName="AfterPost" FunctionName="OnVCAfterPost" ObjectName="VariantColorItemEN" />
+    <Event Enabled="true" EventName="AfterPost" FunctionName="OnMAfterPost" ObjectName="MarkEN" />
+    <Event Enabled="true" EventName="AfterPost" FunctionName="OnCAfterPost" ObjectName="CategoryEN" />
+    <Event Enabled="true" EventName="AfterPost" FunctionName="OnGAfterPost" ObjectName="InventoryGroupEN" />
+    <Event Enabled="true" EventName="AfterPost" FunctionName="OnTWOAfterPost" ObjectName="TWorkOrderEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 27.09.2023 10:35:36 IngilizceAdıKoduVeBuyukHarfCevirme
+
+
+function ConvertToEnglishChars(input)
+{
+    // Türkçe karakterleri İngilizce karakterlere dönüştür
+    input = input.Replace("Ç", "C")
+                 .Replace("ç", "c")
+                 .Replace("Ğ", "G")
+                 .Replace("ğ", "g")
+                 .Replace("İ", "I")
+                 .Replace("ı", "i")
+                 .Replace("Ö", "O")
+                 .Replace("ö", "o")
+                 .Replace("Ş", "S")
+                 .Replace("ş", "s")
+                 .Replace("Ü", "U")
+                 .Replace("ü", "u");
+
+    return input;
+}
+
+/*
+Malzeme Kontrol+
+Renk Kartı Kontrol+
+Marka Kontrol +
+Kategori Kontrol+
+Grup Kontrol+
+Order Kontrol+
+*/
+
+//Malzeme Kontrol
+function OnIAfterPost(sender, ev)
+{
+    if (BaseObject == null 
+    || BaseObject.CurrentRow == null
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("InventoryName"))
+        return null;
+
+    if (BaseObject.CurrentRow.Row["AccessCode"].ToString() == "YARN")
+        return null;
+        
+	if(BaseObject.CurrentRow.Row["AccessCode"].ToString()=="TRIM" || BaseObject.CurrentRow.Row["AccessCode"].ToString()=="FABRIC")
+	{
+	    name_ = BaseObject.CurrentRow.Row["InventoryName"].ToString().Trim();
+	    name_ = name_.ToUpper();
+	    convertedText = ConvertToEnglishChars(name_);
+	   // MessageBox.Show(convertedText);
+	    BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("InventoryName",convertedText);
+    }
+}
+//Renk Kartı Kontrol
+function OnVCAfterPost(sender, ev)
+{
+    if (BaseObject == null 
+    || BaseObject.CurrentRow == null
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("ItemCode")
+    || BaseObject.CurrentRow.Row.IsNull("ItemName"))
+        return null;
+
+    
+	    name_ = BaseObject.CurrentRow.Row["ItemName"].ToString().Trim();
+        code_ = BaseObject.CurrentRow.Row["ItemCode"].ToString().Trim();
+        name_ = name_.ToUpper();
+        code_ = code_.ToUpper();
+        
+	    convertednameText = ConvertToEnglishChars(name_);
+	    convertedcodeText = ConvertToEnglishChars(code_);
+	  
+	    BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("ItemName",convertednameText);
+        BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("ItemCode",convertedcodeText);
+    
+}
+
+//Marka Kontrol
+function OnMAfterPost(sender, ev)
+{
+    if (BaseObject == null 
+    || BaseObject.CurrentRow == null
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("MarkName"))
+        return null;
+
+    
+	    name_ = BaseObject.CurrentRow.Row["MarkName"].ToString().Trim();
+        name_ = name_.ToUpper();
+        
+	    convertednameText = ConvertToEnglishChars(name_);
+	  
+	    BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("MarkName",convertednameText);
+    
+}
+
+//Kategori Kontrol
+function OnCAfterPost(sender, ev)
+{
+    if (BaseObject == null 
+    || BaseObject.CurrentRow == null
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("CategoryName"))
+        return null;
+
+    
+	    name_ = BaseObject.CurrentRow.Row["CategoryName"].ToString().Trim();
+        name_ = name_.ToUpper();
+        
+	    convertednameText = ConvertToEnglishChars(name_);
+	  
+	    BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("CategoryName",convertednameText);
+    
+}
+
+// Grup Kontrol
+function OnGAfterPost(sender, ev)
+{
+    if (BaseObject == null 
+    || BaseObject.CurrentRow == null
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("GroupCode")
+    || BaseObject.CurrentRow.Row.IsNull("GroupName"))
+        return null;
+
+    
+	    name_ = BaseObject.CurrentRow.Row["GroupName"].ToString().Trim();
+        code_ = BaseObject.CurrentRow.Row["GroupCode"].ToString().Trim();
+        name_ = name_.ToUpper();
+        code_ = code_.ToUpper();
+        
+	    convertednameText = ConvertToEnglishChars(name_);
+	    convertedcodeText = ConvertToEnglishChars(code_);
+	  
+	    BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("GroupName",convertednameText);
+        BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("GroupCode",convertedcodeText);
+    
+}
+
+//Order Kontrol
+function OnTWOAfterPost(sender, ev)
+{
+    if (BaseObject == null 
+    || BaseObject.CurrentRow == null
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("WorkOrderNo"))
+        return null;
+
+    
+	    name_ = BaseObject.CurrentRow.Row["WorkOrderNo"].ToString().Trim();
+        name_ = name_.ToUpper();
+        
+	    convertednameText = ConvertToEnglishChars(name_);
+	  
+	    BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("WorkOrderNo",convertednameText);
+    
+}
+</ScriptText>
+</ScriptDefinition>

@@ -1,0 +1,144 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyeGirişiMailGönderim" Enabled="true" Priority="0" ScriptName="İrsaliyeGirişiMailGönderim">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 21.11.2019 17:09:01 İrsaliyeGirişiMailGönderim
+function OnBeforePost(sender,e){
+    toplamMiktar=0m;
+	if(BaseObject!=null &amp;&amp; BaseObject.CurrentRow!=null &amp;&amp; BaseObject.CurrentRow.Row!=null 
+	&amp;&amp; Convert.ToInt32(BaseObject.CurrentRow.Row["InWarehouseId"])==16
+	 &amp;&amp; Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])==1)
+	{ 
+	   
+		    aciklama2="";
+		    	 if(BaseObject.CurrentRow.Row["ReceiptType"].ToString() == "11")
+		        aciklama2="11-Fason Giriş İrsaliyesi ";
+		    else if(BaseObject.CurrentRow.Row["ReceiptType"].ToString() == "2")
+		        aciklama2="2-Parekende Satış İade İrsaliyesi";
+		    else if(BaseObject.CurrentRow.Row["ReceiptType"].ToString() == "3")
+		        aciklama2="3-Toptan Satış İade İrsaliyesi";
+		    else if(BaseObject.CurrentRow.Row["ReceiptType"].ToString() == "12")
+		        aciklama2="12-Fason (Alınan) Çıkış İade İrsaliyesi";    
+		    else if(BaseObject.CurrentRow.Row["ReceiptType"].ToString() == "1")
+		        aciklama2="1-Mal Alım İrsaliyesi";
+		    else if(BaseObject.CurrentRow.Row["ReceiptType"].ToString() == "6")
+		        aciklama2="6-Fasona Giriş İrsaliyesi";  
+
+
+		    sb = new StringBuilder();                 
+		    sb.AppendLine("&lt;!DOCTYPE html&gt;");
+		    sb.AppendLine("&lt;html&gt;");
+		    sb.AppendLine("&lt;head&gt;");
+		    sb.AppendLine("&lt;meta charset= \"utf-8\"&gt;");
+		    sb.AppendLine("&lt;style&gt;");
+		    sb.AppendLine("body {");
+		    sb.AppendLine("font-family:verdana;");
+		    sb.AppendLine("}");
+		    sb.AppendLine("table {");
+		    sb.AppendLine("width:95%;");
+		    sb.AppendLine("}");
+		    sb.AppendLine("table, th, td {");
+		    sb.AppendLine("border: 1px solid #eee;");
+		    sb.AppendLine("border-collapse: collapse;");
+		    sb.AppendLine("}");
+		    sb.AppendLine("td {");
+		    sb.AppendLine("padding: 5px;");
+		    sb.AppendLine("}");
+		    sb.AppendLine("table th {");
+		    
+		    sb.AppendLine("background-color: #888;");
+		    sb.AppendLine("color: white;");
+		    sb.AppendLine("}");
+		    sb.AppendLine("&lt;/style&gt;");
+		    sb.AppendLine("&lt;/head&gt;");
+		    sb.AppendLine("&lt;body&gt;");
+		    sb.AppendLine("&lt;div&gt;&lt;table&gt;");
+		    sb.AppendLine("&lt;tr&gt;&lt;td&gt;Fiş Tipi      : &lt;/td&gt;&lt;td&gt;"+aciklama2.ToString()+"&lt;/td&gt;&lt;/tr&gt;");
+		    sb.AppendLine("&lt;tr&gt;&lt;td&gt;Fiş No        : &lt;/td&gt;&lt;td&gt;"+BaseObject.CurrentRow.Row["ReceiptNo"].ToString()+"&lt;/td&gt;&lt;/tr&gt;");
+		    sb.AppendLine("&lt;tr&gt;&lt;td&gt;Fiş Tarihi    : &lt;/td&gt;&lt;td&gt;"+BaseObject.CurrentRow.Row["ReceiptDate"].ToString()+"&lt;/td&gt;&lt;/tr&gt;");  
+		    sb.AppendLine("&lt;tr&gt;&lt;td&gt;Sevk Tarihi   : &lt;/td&gt;&lt;td&gt;"+BaseObject.CurrentRow.Row["ShipmentDate"].ToString()+"&lt;/td&gt;&lt;/tr&gt;");     
+		    sb.AppendLine("&lt;tr&gt;&lt;td&gt;Belge No      : &lt;/td&gt;&lt;td&gt;"+BaseObject.CurrentRow.Row["DocumentNo"].ToString()+"&lt;/td&gt;&lt;/tr&gt;");    
+		    sb.AppendLine("&lt;tr&gt;&lt;td&gt;Cari Hesap Adı: &lt;/td&gt;&lt;td&gt;"+BaseObject.CurrentRow.Row["CurrentAccountName"].ToString()+"&lt;/td&gt;&lt;/tr&gt;");   
+		    sb.AppendLine("&lt;tr&gt;&lt;td&gt;Depo Kodu     : &lt;/td&gt;&lt;td&gt;"+BaseObject.CurrentRow.Row["InWarehouseCode"].ToString()+"&lt;/td&gt;&lt;/tr&gt;");   
+		    sb.AppendLine("&lt;tr&gt;&lt;td&gt;Depo Adı      : &lt;/td&gt;&lt;td&gt;"+BaseObject.CurrentRow.Row["InWarehouseName"].ToString()+"&lt;/td&gt;&lt;/tr&gt;");  
+		 
+		    str="select isnull(U.UserName,\'\') UserName from MD_User U with (nolock) where U.RecId="+BaseObject.CurrentRow.Row["InsertedBy"].ToString();
+		    dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",str);	
+			if(dt!=null &amp;&amp; dt.Rows.Count&gt;0 &amp;&amp; !dt.Rows[0].IsNull("UserName") &amp;&amp; dt.Rows[0]["UserName"].ToString()!=""){
+			sb.AppendLine("&lt;tr&gt;&lt;td&gt;Kayıt Eden    : &lt;/td&gt;&lt;td&gt;"+dt.Rows[0]["UserName"].ToString()+"&lt;/td&gt;&lt;/tr&gt;");  
+			}
+		    else
+		    {
+		    sb.AppendLine("&lt;tr&gt;&lt;td&gt;KayıtEden     : &lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;"); 	     
+		    }	    
+		    sb.AppendLine("&lt;tr&gt;&lt;td&gt;Kayıt Zamanı   : &lt;/td&gt;&lt;td&gt;"+BaseObject.CurrentRow.Row["InsertedAt"].ToString()+"&lt;/td&gt;&lt;/tr&gt;");                
+		    sb.AppendLine("&lt;/Table&gt; &lt;/div&gt;");
+		    sb.AppendLine("&lt;center&gt;&lt;b&gt;Fiş Satırları&lt;/b&gt;&lt;/center&gt;");
+		    sb.AppendLine("&lt;table style= \"margin-left:auto;margin-right:auto; \"&gt;");
+		    sb.AppendLine("&lt;tr&gt;");                                                                    
+		    taskm=BaseObject.Container.Resolve&lt;|TaskMessageService|&gt;("TaskMessageService");
+		    sb.AppendLine("&lt;th&gt;Malzeme Kodu&lt;/th&gt;&lt;th&gt;Malzeme Adı&lt;/th&gt;&lt;th&gt;Üretim Order No&lt;/th&gt;&lt;th&gt;Model Adı&lt;/th&gt;&lt;th&gt;Varyant Kodu&lt;/th&gt;&lt;th&gt;Varyant Adı&lt;/th&gt;&lt;th&gt;Miktar&lt;/th&gt;&lt;th&gt;Birim&lt;/th&gt;");
+		    sb.AppendLine("&lt;/tr&gt;");
+
+		    foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select(""))
+		     {
+				model_adi = "";
+				 //query = "select (select isnull(I.InventoryName,\'\') from IM_Item I with (nolock) where I.RecId=WO.InventoryId) [model_adi] from MA_WorkOrder WO with (nolock) where WO.WorkOrderNo=\'"+dr["ManufacturingOrderNo"].ToString()+"\'";
+				 query = "select top 1 X.model_adi from (";
+				 query += " select isnull((select isnull(I.InventoryName,\'\') from IM_Item I with (nolock) ";
+				 query += " where I.RecId=WO.InventoryId and isnull(I.InventoryName,\'\')!=\'\'),\'\') [model_adi] ";
+				 query += " from MA_WorkOrder WO with (nolock) where WO.WorkOrderNo=\'"+dr["ManufacturingOrderNo"].ToString()+"\'";
+				 query += " )X where isnull(X.model_adi,\'\')!=\'\'";
+			//	 MessageBox.Show(query);
+				 dt2 = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt2",query);	
+				if(dt2!=null &amp;&amp; dt2.Rows.Count&gt;0)
+				{
+						model_adi = dt2.Rows[0]["model_adi"].ToString();
+				}
+		           sb.AppendLine("&lt;tr&gt;");
+		           sb.AppendLine("&lt;td&gt;"+dr["InventoryCode"].ToString()+"&lt;/td&gt;");  
+		           sb.AppendLine("&lt;td&gt;"+dr["InventoryName"].ToString()+"&lt;/td&gt;");
+		           sb.AppendLine("&lt;td&gt;"+dr["ManufacturingOrderNo"].ToString()+"&lt;/td&gt;");
+		           sb.AppendLine("&lt;td&gt;"+model_adi.ToString()+"&lt;/td&gt;");
+		           
+		          /* if(!dr.IsNull("WorkOrderReceiptItemId") &amp;&amp; dr["WorkOrderReceiptItemId"].ToString()!="")
+		       		 {
+			          	 str="select isnull(W.WorkOrderNo,\'\') WorkOrderNo from MA_WorkOrder W with (nolock) where W.RecId=(select WI.WorkOrderId from MA_WorkOrderItem WI with (nolock)  where WI.RecId="+dr["WorkOrderReceiptItemId"].ToString()+" )";
+			           dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",str);	
+				           if(dt!=null &amp;&amp; dt.Rows.Count&gt;0 &amp;&amp; !dt.Rows[0].IsNull("WorkOrderNo") &amp;&amp; dt.Rows[0]["WorkOrderNo"].ToString()!="")
+				           {
+			 	                sb.AppendLine("&lt;td&gt;"+dt.Rows[0]["WorkOrderNo"].ToString()+"&lt;/td&gt;");  
+		                    }
+		                    else sb.AppendLine("&lt;td&gt;&lt;/td&gt;");
+		           }
+		           else
+		              sb.AppendLine("&lt;td&gt;&lt;/td&gt;");
+					*/
+		              
+		           sb.AppendLine("&lt;td&gt;"+dr["ItemVariant1Code"].ToString()+"&lt;/td&gt;"); 
+		           sb.AppendLine("&lt;td&gt;"+dr["Itemvariant1Name"].ToString()+"&lt;/td&gt;");
+		           sb.AppendLine("&lt;td&gt;"+dr["Quantity"].ToString("#,##0")+"&lt;/td&gt;");
+		           sb.AppendLine("&lt;td&gt;"+dr["UnitCode"].ToString()+"&lt;/td&gt;");  
+		           sb.AppendLine("&lt;/tr&gt;");
+		           toplamMiktar+=Convert.ToDecimal(dr["Quantity"]);		           
+		           
+		           }
+		     }
+		     colspan=(int)6;
+		     sb.AppendLine("&lt;th Colspan="+colspan.ToString()+"&gt;Toplam : &lt;/th&gt;&lt;th&gt;"+toplamMiktar.ToString("#,##0")+"&lt;/th&gt;&lt;th&gt;&lt;/th&gt;");
+		     sb.AppendLine("&lt;tr&gt;");
+		     sb.AppendLine("&lt;/tr&gt;");                             
+		     sb.AppendLine("&lt;/table&gt;");                
+		     sb.AppendLine("&lt;/body&gt;");                
+		     sb.AppendLine("&lt;/html&gt;");                     
+		 //    MessageBox.Show(sb.ToString());
+	      taskm.SendEmail("satinalma@actekstil.com",aciklama2,sb.ToString());
+
+		  
+	 }
+	
+	</ScriptText>
+</ScriptDefinition>

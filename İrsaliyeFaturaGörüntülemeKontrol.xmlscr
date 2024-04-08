@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyeFaturaGörüntülemeKontrol" Enabled="true" Priority="0" ScriptName="İrsaliyeFaturaGörüntülemeKontrol">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptVM" />
+    <Event Enabled="true" EventName="BeforeCommandExecution" FunctionName="OnReceiptBeforeCommandExecution" ObjectName="InventoryReceiptVM" />
+    <Event Enabled="true" EventName="BeforeCommandExecution" FunctionName="OnInvoiceBeforeCommandExecution" ObjectName="InvoiceVM" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 12.12.2023 14:04:11 İrsaliyeFaturaGörüntülemeKontrol
+function OnReceiptBeforeCommandExecution(sender, cmd)
+{
+	if(BaseObject.ActiveEntity == null 
+	    || BaseObject.ActiveEntity.CurrentRow == null
+	    || BaseObject.ActiveEntity.CurrentRow.Row == null
+	    || BaseObject.ActiveEntity.CurrentRow.Row.IsNull("EInvoiceStatus")	   
+	    )
+    	return null;
+    
+    if(cmd.CommandName == "ShowEDespatchReceiptCommand")
+    {
+    	if(Convert.ToInt32(BaseObject.ActiveEntity.CurrentRow.Row["EDespatchStatus"]) != 3)
+    		{
+    			cmd.Cancel = true;
+				return null;
+    		}
+    }
+}
+function OnInvoiceBeforeCommandExecution(sender, cmd)
+{
+	if(BaseObject.ActiveEntity == null 
+	    || BaseObject.ActiveEntity.CurrentRow == null
+	    || BaseObject.ActiveEntity.CurrentRow.Row == null
+	    || BaseObject.ActiveEntity.CurrentRow.Row.IsNull("EInvoiceStatus")	    
+	    )
+    	return null;
+    
+    if(cmd.CommandName == "ShowEInvoiceReceiptCommand")
+    {
+    	if(Convert.ToInt32(BaseObject.ActiveEntity.CurrentRow.Row["EInvoiceStatus"]) != 3)
+    		{
+    			cmd.Cancel = true;
+				return null;
+    		}
+    }
+}
+
+
+</ScriptText>
+</ScriptDefinition>

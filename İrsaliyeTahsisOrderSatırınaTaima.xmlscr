@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="Main script" Enabled="true" Priority="0" ScriptName="Main">
+  <Events>
+    <Event Enabled="true" ObjectName="WorkOrderEN" />
+    <Event Enabled="true" EventName="ColumnChanged" FunctionName="OrderColumnChanged" ObjectName="WorkOrderEN" />
+  </Events>
+  <Histories>
+    <History EditedBy="System generated" EntryDate="2023-05-16T17:44:18.7233277+03:00">
+      <Change>System default version</Change>
+    </History>
+  </Histories>
+  <ScriptText>
+function OrderColumnChanged(sender, ev)
+{
+	if( BaseObject == null || BaseObject.CurrentRow == null || BaseObject.CurrentRow.Row == null || ev.Row.Table.TableName != "MA_WorkOrderItemReceipt" )
+		return null;
+		
+	     susleme=""; 
+	
+          query="select distinct string_agg(IRI.UD_Susleme,\'-\') from  IM_ReceiptItem IRI with (nolock) where IRI.RecId="+ev.Row["InventoryReceiptItemId"].ToString();
+ 	 dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt", query);
+		if(dt!=null &amp;&amp; dt.Rows.Count&gt;0)
+	{
+		susleme+=dt.Rows[0][0].ToString()+"-";
+	}
+    ev.Row.SetField&lt;|string|&gt;("UD_Susleme",susleme);
+             	 
+}</ScriptText>
+</ScriptDefinition>

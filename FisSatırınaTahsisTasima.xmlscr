@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FisSatırındaTahsisTasima" Enabled="true" Priority="0" ScriptName="FisSatırındaTahsisTasima">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 25.01.2023 12:11:04
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null
+	|| BaseObject.CurrentRow.Row.IsNull("ReceiptType")
+	|| (Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])!=1))
+		return null;
+			foreach (ri  in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null"))
+	{
+	
+		query="select wo.WorkOrderNo,I.InventoryCode from IM_ItemAllocation ia left join MA_WorkOrderItem woi with (nolock) on ia.WorkOrderItemId=woi.RecId left join MA_WorkOrder wo  with (nolock) on wo.RecId=woi.WorkOrderId left join  IM_Item I with(nolock) on I.RecId="+ri["InventoryId"].ToString()+" where ia.InventoryReceiptItemId="+ri["RecId"].ToString();
+			dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query);
+	
+			if(dt==null || dt.Rows.Count&lt;0)
+			   return null;
+			   
+			   BaseObject.ShowMessage(dt.Rows[0][0].ToString()+" "+dt.Rows[0][1].ToString());
+			   
+			  ri.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation","Model Kodu: "+dt.Rows[0][1].ToString()+" Order No: "+dt.Rows[0][0].ToString());
+}
+}</ScriptText>
+</ScriptDefinition>

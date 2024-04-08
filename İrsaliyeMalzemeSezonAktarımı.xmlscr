@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyeMalzemeSezonAktarımı" Enabled="true" Priority="0" ScriptName="İrsaliyeMalzemeSezonAktarımı">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 4.07.2023 16:20:46
+/*
+İrsaliye satırında bulunan malzeme içerisindeki sezon bilgisini satırdaki özel alana taşır.
+*/
+ function OnBeforePost(sender,eventArg){
+if(BaseObject == null 
+|| BaseObject.CurrentRow == null 
+|| BaseObject.CurrentRow.Row == null 
+)
+inventory_season_code = "";
+        foreach(ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("InventoryId is not null"))
+                {
+                  if(ri.RowState!=DataRowState.Deleted &amp;&amp; ri.RowState!=DataRowState.Deleted)
+                    {
+                        str = "select isnull(I.SeasonCode,\'\') [sc] from IM_Item I with (nolock) where I.RecId = \'"+ri["InventoryId"].ToString()+"\'";
+                        dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",str);	
+
+                          if(dt == null || dt.Rows.Count &lt;= 0)
+                            return null;
+                          
+                          inventory_season_code = dt.Rows[0]["sc"].ToString();
+                       	 ri.SetField&lt;|String|&gt;("UD_MalzemeSezon",inventory_season_code.ToString());   
+                    }
+                }
+ }</ScriptText>
+</ScriptDefinition>

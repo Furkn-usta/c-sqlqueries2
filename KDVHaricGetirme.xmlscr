@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KDVHaricGetirme" Enabled="true" Priority="0" ScriptName="KDVHaricGetirme">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 2.02.2023 16:26:20
+function OnBeforePost(sender,ev)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null 	)
+	return null;
+	
+	foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select("OrderReceiptItemId is not null"))
+	{	
+		dr.SetField&lt;|int|&gt;("VatIncluded",0);
+		
+	}
+}
+
+
+</ScriptText>
+</ScriptDefinition>

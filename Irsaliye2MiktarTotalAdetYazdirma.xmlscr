@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="Irsaliye2MiktarTotalAdetYazdirma" Enabled="true" Priority="0" ScriptName="Irsaliye2MiktarTotalAdetYazdirma">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 14.02.2024 16:37:40 Irsaliye2MiktarTotalAdetYazdirma
+
+function OnAfterSucceededPost(sender, ev)
+{
+	if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("ReceiptType")
+    /*|| BaseObject.CurrentRow.Row.IsNull("ReceiptSubType")
+    || Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptSubType"]) != 1*/
+    || Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"]) != 125
+    
+    || BaseObject.CurrentRow.Row.IsNull("RecId"))
+		return null;
+	
+        rec_ = BaseObject.CurrentRow.Row["RecId"].ToString();
+                	sb = new StringBuilder();
+                	 foreach(ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("Quantity2&gt;0"))
+                {
+                    sb.Clear();
+                    sb.AppendLine(" select sum(isnull(RI.Quantity2,0) * isnull(RI.UnitPrice,0)) [tot_miko]");
+                    sb.AppendLine(" ,sum((isnull(RI.UnitPrice,0)*ISNULL(RI.VatRate,0)/100)*isnull(RI.Quantity2,0)) [tot_vat]");
+                    sb.AppendLine(" ,sum((isnull(RI.UnitPrice,0)*ISNULL(RI.VatRate,0)/100)*isnull(RI.Quantity2,0))+sum(isnull(RI.Quantity2,0) * isnull(RI.UnitPrice,0)) [tot_mik]");
+                    sb.AppendLine(" from IM_Receipt R with (nolock)");
+                    sb.AppendLine(" left join IM_ReceiptItem RI with (nolock) on RI.InventoryReceiptId=R.RecId");
+                    sb.AppendLine(" where R.RecId=\'"+BaseObject.CurrentRow.Row["RecId"].ToString()+"\'");
+                   // MessageBox.Show(sb.ToString());
+                    dt_sb = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_sb",sb.ToString());
+                    if(dt_sb != null &amp;&amp; dt_sb.Rows.Count &gt; 0)
+                      {
+                        tot_miko_ = Convert.ToDecimal(dt_sb.Rows[0]["tot_miko"]);
+                        tot_vat_ = Convert.ToDecimal(dt_sb.Rows[0]["tot_vat"]);
+                        tot_mik_ = Convert.ToDecimal(dt_sb.Rows[0]["tot_mik"]);                        
+                        update_sorgu ="update IM_Receipt set GrandTotal = \'"+tot_mik_.ToString().Replace(",",".")+"\', SubTotal=\'"+tot_miko_.ToString().Replace(",",".")+"\' , VatAmount = \'"+tot_vat_.ToString().Replace(",",".")+"\' where RecId=\'"+rec_.ToString()+"\'";
+                    // MessageBox.Show(update_sorgu.ToString());
+                        UtilityFunctions.SqlCustomScalarQuery(BaseObject.Connection,null,update_sorgu.ToString());        
+                          BaseObject.Get(BaseObject.CurrentRow.Row["RecId"]);
+                        }
+                      }
+                
+           
+}</ScriptText>
+</ScriptDefinition>

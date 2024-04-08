@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KesimAtölyeAktarım" Enabled="true" Priority="0" ScriptName="KesimAtölyeAktarım">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderCuttingProductionEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="TWorkOrderCuttingProductionEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 4.01.2024 10:55:18 KesimAtölyeAktarım
+function OnAfterSucceededPost (sender,eventArg)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null
+	|| BaseObject.CurrentRow.Row.IsNull("ProductionType")
+	|| BaseObject.CurrentRow.Row.IsNull("WorkOrderItemId")
+	|| BaseObject.CurrentRow.Row.IsNull("CurrentAccountId")
+	|| Convert.ToInt32(BaseObject.CurrentRow.Row["ProductionType"]) != 100
+	)
+		return null;
+	//MessageBox.Show(BaseObject.CurrentRow.Row["WorkOrderItemId"].ToString());
+	//MessageBox.Show(BaseObject.CurrentRow.Row["CurrentAccountName"].ToString());
+	
+	update_query = "update MA_WorkOrder set UD_CuttingCurrent=\'"+BaseObject.CurrentRow.Row["CurrentAccountName"].ToString()+"\' from MA_WorkOrder WO with (nolock) left join MA_WorkOrderItem WOI with (nolock) on WOI.WorkOrderId=WO.RecId where WOI.RecId=\'"+BaseObject.CurrentRow.Row["WorkOrderItemId"].ToString()+"\' and WOI.WorkOrderSubType=1";
+	UtilityFunctions.SqlCustomScalarQuery(BaseObject.Connection,null,update_query.ToString());
+}
+
+</ScriptText>
+</ScriptDefinition>

@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyeBrütMiktarKontrol" Enabled="true" Priority="0" ScriptName="İrsaliyeBrütMiktarKontrol">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" ObjectName="OrderReceiptEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="OrderReceiptEN" />
+  </Events>
+  <Histories>
+    <History EditedBy="Furkan Usta" EntryDate="2023-04-19T00:00:00">
+      <Change>/*
+İrsaliye satırlarında brüt miktar boş bırakılamaz.
+Eğer üretim emri bağlı ise üretim emrinin miktarından büyük miktarı fiş satırında giremez.
+Kayıt başarılı şekilde sonlanırsa üretim emrindeki özel alana irsaliye satırındaki 2.miktarı update eder.
+*/</Change>
+    </History>
+  </Histories>
+  <ScriptText>
+//Generated on 19.04.2023 12:26:02
+/*
+İrsaliye satırlarında brüt miktar boş bırakılamaz.
+Eğer üretim emri bağlı ise üretim emrinin miktarından büyük miktarı fiş satırında giremez.
+
+*/
+function OnBeforePost(sender,ev)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null)
+	return null;
+
+  	foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null and WorkOrderReceiptItemId is not null "))
+	{	
+    	
+  	if(dr.IsNull("GrossQuantity") || Convert.ToDecimal(dr["GrossQuantity"]) &lt;= 0m)
+    { 
+      sender.ShowMessage("Brüt Miktar Alanı Boş Bırakılamaz! {scr:İrsaliyeBrütMiktarKontrol}");
+      ev.Cancel = true;
+      return null;
+    }
+
+  query =  " select isnull(WO.Quantity,0) [mik] ,WOI.RecId [rec]  from MA_WorkOrder WO with (nolock) ";
+  query += " left join MA_WorkOrderItem WOI with (nolock) on WOI.WorkOrderId=WO.RecId ";
+  query += " where WOI.RecId=\'"+dr["WorkOrderReceiptItemId"].ToString()+"\' group by WO.Quantity ,WOI.RecId ";
+ dt=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query);
+	
+  if(dt == null || dt.Rows.Count&lt;0)
+		return null;
+		
+   mik_ = Convert.ToDecimal(dt.Rows[0]["mik"]);
+   rec_ = Convert.ToInt32(dt.Rows[0]["rec"]);
+  
+  re_mik = Convert.ToDecimal(dr["GrossQuantity"]);
+    
+      if(re_mik &gt; mik_)
+    {
+      sender.ShowMessage("Brüt Miktar Alanı Üretim Emri Miktarından Fazla Olamaz! {scr:İrsaliyeBrütMiktarKontrol}");
+      ev.Cancel = true;
+       return null;
+    }
+  }
+
+}
+/*
+Kayıt başarılı şekilde sonlanırsa üretim emrindeki özel alana irsaliye satırındaki 2.miktarı update eder.
+*/
+function OnAfterSucceededPost(sender,ev)
+{
+	if(BaseObject==null 
+	|| BaseObject.CurrentRow==null
+	|| BaseObject.CurrentRow.Row==null
+	|| BaseObject.CurrentRow.Row.IsNull("ReceiptType")
+	|| Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"]) != 2 )
+	return null;
+	
+	foreach(dr in BaseObject.Data.Tables["IM_OrderReceiptItem"].Select("RecId is not null  and WorkOrderReceiptItemId is not null and Quantity2 is not null"))
+	{
+	/*str = 	"update MA_WorkOrder set UD_Quantity2=\'"+dr["Quantity2"].ToString("#.00").Replace(",",".")+"\' where RecId =(select top 1 WorkOrderId from MA_WorkOrderItem WOI with (nolock) left join IM_OrderReceiptItem RI with (nolock) on RI.WorkOrderReceiptItemId=WOI.RecId where WOI.RecId=\'"+dr["WorkOrderReceiptItemId"].ToString()+"\')";
+	MessageBox.Show(str);*/
+	UtilityFunctions.SqlCustomScalarQuery(BaseObject.Connection,null,	"update MA_WorkOrder set UD_Quantity2=\'"+dr["Quantity2"].ToString("#.00").Replace(",",".")+"\' where RecId =(select top 1 WorkOrderId from MA_WorkOrderItem WOI with (nolock) left join IM_OrderReceiptItem RI with (nolock) on RI.WorkOrderReceiptItemId=WOI.RecId where WOI.RecId=\'"+dr["WorkOrderReceiptItemId"].ToString()+"\')");
+
+	}
+		
+}</ScriptText>
+</ScriptDefinition>

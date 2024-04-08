@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IMRIBarkod" Enabled="true" Priority="0" ScriptName="IMRIBarkod">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 18.09.2023 15:38:44 IMRIBarkod
+
+
+function OnAfterSucceededPost(sender,eventArg)
+{
+ if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("RecId")
+    || BaseObject.CurrentRow.Row.IsNull("ReceiptType")
+    || Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"]) &gt; 100
+    )
+    return null;
+
+    	 foreach(ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null "))
+	    {
+            ri.SetField&lt;|string|&gt;("UD_Imri",ri["RecId"].ToString());
+        }
+}</ScriptText>
+</ScriptDefinition>

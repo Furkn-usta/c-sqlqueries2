@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="NotDegisiklikUyarı" Enabled="true" Priority="0" ScriptName="NotDegisiklikUyarı">
+  <Events>
+    <Event Enabled="true" ObjectName="InitialCostEN" />
+    <Event Enabled="true" EventName="ViewLoaded" FunctionName="OnViewLoaded" ObjectName="InitialCostEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 10.08.2022 15:35:47
+function OnViewLoaded(sender, ev)
+{
+  if(BaseObject.ActiveEntity != null || BaseObject.ActiveEntity.CurrentRow != null || BaseObject.ActiveEntity.CurrentRow.Row!=null  || BaseObject.ActiveEntity.CurrentRow.Row.IsNull("MA_InitialCost") || BaseObject.ActiveEntity.CurrentRow.Row["MA_InitialCost"].ToString()=="")
+   {
+ 	if(BaseObject.ActiveEntity.CurrentRow.Row.IsNull("UD_Notlar") || BaseObject.ActiveEntity.CurrentRow.Row["UD_Notlar"].ToString() == ""|| BaseObject.ActiveEntity.CurrentRow.Row["UD_Notlar"].ToString() == " ")
+        BaseObject.ActiveEntity.ShowMessage("Boş yada null değer"); 
+ 		else 
+  		{
+  			Aciklama=(BaseObject.ActiveEntity.CurrentRow.Row["UD_Notlar"].ToString()); 
+			if(Aciklama.HasVersion(DataRowVersion.Original!=DataRowVersion.Current))
+			{
+  				BaseObject.ActiveEntity.ShowMessage(BaseObject.ActiveEntity.CurrentRow["UD_Notlar"].ToString());
+	  		}
+ 		}
+  
+  }
+}</ScriptText>
+</ScriptDefinition>

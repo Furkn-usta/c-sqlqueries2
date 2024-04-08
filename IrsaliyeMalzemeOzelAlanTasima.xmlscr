@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IrsaliyeMalzemeOzelAlanTasima" Enabled="true" Priority="0" ScriptName="IrsaliyeMalzemeOzelAlanTasima">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 16.01.2024 15:43:01 IrsaliyeMalzemeOzelAlanTasima
+
+function OnBeforePost(sender, ev)
+{
+	if (BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null)
+		return null;
+/*
+	if(BaseObject.ActiveSession.User.RecId != 1)
+		return null;
+		*/
+      	
+
+   		foreach(iri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("InventoryId is not null and ItemType=1"))
+	    {    
+      query = "select isnull(I.UD_InvoiceRowExplanation,\'-\') [fatura_satir_aciklama] , isnull(I.UD_InvoiceRowName,\'-\') [fatura_satir_adi] from IM_Item I with (nolock) where I.RecId=\'"+iri["InventoryId"].ToString()+"\'";
+      dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query.ToString());
+                          
+      if(dt == null || dt.Rows.Count &lt;= 0)
+          return null;
+              
+      fatura_satir_aciklama_ = dt.Rows[0]["fatura_satir_aciklama"].ToString();
+      fatura_satir_adi_ = dt.Rows[0]["fatura_satir_adi"].ToString();
+     /* 
+      MessageBox.Show(fatura_satir_aciklama_.ToString());
+      MessageBox.Show(fatura_satir_adi_.ToString());
+     */
+     f_s_a_= "";
+      query2 = " select isnull(DFV.Explanation,\'-\') [exp_]  from MD_DataField DF with (nolock) ";      
+      query2 += " left join MD_DataFieldValue DFV with (nolock) on DFV.FieldId=DF.RecId ";
+      query2 += " where DF.TableName=\'IM_Item\' and DF.FieldName=\'UD_InvoiceRowExplanation\' and DFV.FieldId=430 and DFV.CodeValue=\'"+fatura_satir_aciklama_.ToString()+"\' ";
+       dt2 = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt2",query2.ToString());
+                        
+      if(dt2 != null &amp;&amp; dt2.Rows.Count &gt; 0)
+         {
+        	 f_s_a_ = dt2.Rows[0]["exp_"].ToString();
+         }
+      
+      f_s_n_ = "";
+      query3 = " select isnull(DFV.Explanation,\'-\') [exp_]  from MD_DataField DF with (nolock) ";      
+      query3 += " left join MD_DataFieldValue DFV with (nolock) on DFV.FieldId=DF.RecId ";
+      query3 += " where DF.TableName=\'IM_Item\' and DF.FieldName=\'UD_InvoiceRowName\' and DFV.FieldId=431 and DFV.CodeValue=\'"+fatura_satir_adi_.ToString()+"\' ";
+      dt3 = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt3",query3.ToString());
+                         
+      if(dt3 != null &amp;&amp; dt3.Rows.Count &gt; 0)
+        {
+      		f_s_n_ = dt3.Rows[0]["exp_"].ToString();  
+        }
+
+      if(f_s_a_.ToString().Trim() =="")
+      	f_s_a_ = "-";
+      if(f_s_n_.ToString().Trim() =="")
+      	f_s_n_ = "-";
+      	
+      cu_no_ = "-";
+
+      if(!iri.IsNull("WorkOrderReceiptItemId"))
+      {
+      	query4 = "select isnull(WO.CustomerOrderNo,\'\') [co_no] from MA_WorkOrder WO with (nolock) left join MA_WorkOrderItem WOI with (nolock) on WOI.WorkOrderId=WO.RecId where WOI.WorkOrderSubType=1 and WOI.RecId=\'"+iri["WorkOrderReceiptItemId"].ToString()+"\'";
+        dt4 = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt4",query4.ToString());
+                          
+     	 if(dt4 == null || dt4.Rows.Count &lt;= 0)
+          	return null;
+          cu_no_ = dt4.Rows[0]["co_no"].ToString();
+      }
+      iri.SetField&lt;|string|&gt;("UD_EInvoiceItemExplanation", "##"+f_s_n_.ToString()+"##"+"@#@"+f_s_a_.ToString()+"@#@"+"$#$"+cu_no_.ToString()+"$#$"); 
+   
+}
+}</ScriptText>
+</ScriptDefinition>

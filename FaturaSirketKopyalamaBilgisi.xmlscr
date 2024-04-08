@@ -1,0 +1,250 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FaturaSirketKopyalamaBilgisi" Enabled="true" Priority="0" ScriptName="FaturaSirketKopyalamaBilgisi">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="CurrentAccountReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="BankReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="ChequeReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 2.02.2024 09:13:30 FaturaSirketKopyalamaBilgisi 
+
+function OnBeforePost(sender, cmd)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null
+	|| !BaseObject.IsCopyEntity
+	)
+		return null;
+		
+		tableName = "IM_Invoice";
+	if(BaseObject.Name == "InventoryReceiptEN")
+		tableName = "IM_Receipt";
+	else if(BaseObject.Name == "CurrentAccountReceiptEN")
+		tableName = "FI_Receipt";
+	else if(BaseObject.Name == "BankReceiptEN")
+		tableName = "FI_BankReceipt";		
+    else if(BaseObject.Name == "ChequeReceiptEN")
+		tableName = "FI_ChequeReceipt";			
+	else
+		tableName = "IM_Invoice";
+		
+//	MessageBox.Show(tableName);
+		user_recId = BaseObject.ActiveSession.Company.CompanyCode;
+		//	MessageBox.Show("1");
+		cssr = BaseObject.CurrentRow.Row["CopyServiceSourceRecId"].ToString();
+		//	MessageBox.Show("2");
+		update(cssr);	
+		//	MessageBox.Show("3");
+		ttest = queryinfo(cssr,tableName);
+			//MessageBox.Show("4");
+		fis_no = BaseObject.CurrentRow.Row["CopyServiceSourceKeyValue"].ToString();
+
+		if(tableName == "IM_Invoice")
+		{
+		//	MessageBox.Show(tableName);
+			BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("UD_CopyInfo",fis_no.ToString()+"-"+ttest.ToString());
+		}
+		else if (tableName == "IM_Receipt")
+		{		
+			BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("UD_CopyInfo",fis_no.ToString()+"-"+ttest.ToString());		
+		}
+        else if (tableName == "FI_Receipt")
+		{		
+			BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("UD_CopyInfo",fis_no.ToString()+"-"+ttest.ToString());		
+		}
+         else if (tableName == "FI_BankReceipt")
+		{		
+			BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("UD_CopyInfo",fis_no.ToString()+"-"+ttest.ToString());		
+		}
+         else if (tableName == "FI_ChequeReceipt")
+		{		
+			BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("UD_CopyInfo",fis_no.ToString()+"-"+ttest.ToString());		
+		}
+		//	MessageBox.Show("son");
+}
+
+function update(recId)
+{
+		query = "update "+tableName.ToString()+" set UD_UpdateStat =	\'1\' where RecId = \'"+recId.ToString()+"\'";
+		dt=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query);
+        if(dt == null || dt.Rows.Count &lt;= 0)
+			    return null; 
+}
+function queryinfo(recId,tblName)
+{
+	if(tblName=="IM_Invoice")
+	{
+		query = " select  case  when ([I].[ReceiptType] = 1) then N\'1-Mal Alım Faturası\' when ([I].[ReceiptType] = 2) 				";
+		query += " then N\'2-Perakende Satış İade Faturası\' when ([I].[ReceiptType] = 3) then N\'3-Toptan Satış İade Faturası\' 		";
+		query += " when ([I].[ReceiptType] = 4) then N\'4-Konsinye Çıkış İade Faturası\' 												";
+		query += " when ([I].[ReceiptType] = 6) then N\'6-Fasona Giriş Faturası\' 													";
+		query += " when ([I].[ReceiptType] = 7) then N\'7-Alınan Fiyat Farkı Faturası\' 												";
+		query += " when ([I].[ReceiptType] = 8) then N\'8-Konsinye Satış Iadesi\' 													";
+		query += " when ([I].[ReceiptType] = 9) then N\'9-Müstahsil Faturası\' 														";
+		query += " when ([I].[ReceiptType] = 11) then N\'11-Fason (Alınan) Giriş Faturası\' 											";
+		query += " when ([I].[ReceiptType] = 12) then N\'12-Fason (Alınan) Çıkış İade Faturası\' 										";
+		query += " when ([I].[ReceiptType] = 22) then N\'22-Alınan Hizmet Faturası\' 													";
+		query += " when ([I].[ReceiptType] = 23) then N\'23-Verilen Hizmet İadesi\' 													";
+		query += " when ([I].[ReceiptType] = 28) then N\'28-Konsinye Alış Faturası\' 													";
+		query += " when ([I].[ReceiptType] = 91) then N\'91-Alınan Proforma Fatura\' 													";
+		query += " when ([I].[ReceiptType] = 92) then N\'92-Alınan Serbest Meslek Makbuzu\' 											";
+		query += " when ([I].[ReceiptType] = 93) then N\'93-Alınan Kur Farkı Faturası\' 												";
+		query += " when ([I].[ReceiptType] = 94) then N\'94-Alınan Vade Farkı Faturası\' 												";
+		query += " when ([I].[ReceiptType] = 120) then N\'120-Toptan Satış Faturası\' 												";
+		query += " when ([I].[ReceiptType] = 121) then N\'121-Perakende Satış Faturası\' 												";
+		query += " when ([I].[ReceiptType] = 122) then N\'122-Mal Alım İade Faturası\' 												";
+		query += " when ([I].[ReceiptType] = 125) then N\'125-Fasona Çıkış Faturası\' 												";
+		query += " when ([I].[ReceiptType] = 126) then N\'126-Verilen Fiyat Farkı Faturası\' 											";
+		query += " when ([I].[ReceiptType] = 127) then N\'127-Konsinye Satış Faturası (Depo Takibi)\' 								";
+		query += " when ([I].[ReceiptType] = 128) then N\'128-Konsinye Satış Faturası\' 												";
+		query += " when ([I].[ReceiptType] = 133) then N\'133-Fason (Verilen) Giriş İade Faturası\' 									";
+		query += " when ([I].[ReceiptType] = 134) then N\'134-Fason (Alınan) Çıkış Faturası\' 										";
+		query += " when ([I].[ReceiptType] = 138) then N\'138-Verilen Hizmet Faturası\' 												";
+		query += " when ([I].[ReceiptType] = 139) then N\'139-Alınan Hizmet İadesi\' 													";
+		query += " when ([I].[ReceiptType] = 191) then N\'191-Verilen Proforma Fatura\' 												";
+		query += " when ([I].[ReceiptType] = 192) then N\'192-Verilen Serbest Meslek Makbuzu\' 										";
+		query += " when ([I].[ReceiptType] = 193) then N\'193-Verilen Kur Farkı Faturası\' 											";
+		query += " when ([I].[ReceiptType] = 194) then N\'194-Verilen Vade Farkı Faturası\' else N\'\' end  [fisTipi]					";
+		query += " from "+tblName.ToString()+" I with (nolock) where I.RecId=\'"+recId.ToString()+"\'";
+	}
+    if(tblName=="FI_ChequeReceipt")
+    {
+        query = " select case  when ([CHR].[ReceiptType] = 1) then N\'1-Çek Giriş Bordrosu\' 									";
+        query += " when ([CHR].[ReceiptType] = 2) then N\'2-Senet Giriş Bordrosu\' 												";
+        query += " when ([CHR].[ReceiptType] = 3) then N\'3-Çek Çıkış Bordrosu (Cari Hesaba)\' 									";
+        query += " when ([CHR].[ReceiptType] = 4) then N\'4-Çek Çıkış Bordrosu (Banka Tahsile)\' 								";
+        query += " when ([CHR].[ReceiptType] = 5) then N\'5-Çek Çıkış Bordrosu (Banka Teminata)\' 								";
+        query += " when ([CHR].[ReceiptType] = 6) then N\'6-Senet Çıkış Bordrosu (Cari Hesaba)\' 								";
+        query += " when ([CHR].[ReceiptType] = 7) then N\'7-Senet Çıkış Bordrosu (Banka Tahsile)\' 								";
+        query += " when ([CHR].[ReceiptType] = 8) then N\'8-Senet Çıkış Bordrosu (Banka Teminata)\' 							";
+        query += " when ([CHR].[ReceiptType] = 11) then N\'11-İşlem Bordrosu (Müşteri Çeki)\' 									";
+        query += " when ([CHR].[ReceiptType] = 12) then N\'12-İşlem Bordrosu (Kendi Çekimiz)\' 									";
+        query += " when ([CHR].[ReceiptType] = 13) then N\'13-İşlem Bordrosu (Alacak Senedi)\' 									";
+        query += " when ([CHR].[ReceiptType] = 14) then N\'14-İşlem Bordrosu (Borç Senedi)\' 									";
+        query += " when ([CHR].[ReceiptType] = 15) then N\'15-İşlem Bordrosu (Çek Transferi)\' 									";
+        query += " when ([CHR].[ReceiptType] = 16) then N\'16-İşlem Bordrosu (Senet Transferi)\' else N\'\' end  [fisTipi]		";
+        query += " from "+tblName.ToString()+" [CHR] with (nolock)	 where [CHR].RecId=\'"+recId.ToString()+"\'";
+
+
+    }
+    if(tblName=="FI_Receipt")
+    {
+        
+        query = " select case  when ([CR].[ReceiptType] = 1) then N\'1-Nakit Ödeme\' 															  ";
+        query += " when ([CR].[ReceiptType] = 2) then N\'2-Nakit Tahsilat\' 																		  ";
+        query += " when ([CR].[ReceiptType] = 3) then N\'3-Borç Dekontu\' 																		  ";
+        query += " when ([CR].[ReceiptType] = 4) then N\'4-Alacak Dekontu\' 																		  ";
+        query += " when ([CR].[ReceiptType] = 5) then N\'5-Virman Fişi\' 																		  ";
+        query += " when ([CR].[ReceiptType] = 6) then N\'6-Açılış Fişi\' 																		  ";
+        query += " when ([CR].[ReceiptType] = 7) then N\'7-Gider Pusulası\' 																		  ";
+        query += " when ([CR].[ReceiptType] = 12) then N\'12-Özel Fiş\' 																			  ";
+        query += " when ([CR].[ReceiptType] = 15) then N\'15-Faktoring Fişi\' 																	  ";
+        query += " when ([CR].[ReceiptType] = 16) then N\'16-Kur Farkı Borç\' 																	  ";
+        query += " when ([CR].[ReceiptType] = 17) then N\'17-Kur Farkı Alacak\' 																	  ";
+        query += " when ([CR].[ReceiptType] = 18) then N\'18-Vade Farkı Borç\' 																	  ";
+        query += " when ([CR].[ReceiptType] = 19) then N\'19-Vade Farkı Alacak\' 																  ";
+        query += " when ([CR].[ReceiptType] = 21) then N\'21-Fatura Entegrasyon\' 																  ";
+        query += " when ([CR].[ReceiptType] = 22) then N\'22-İrsaliye Entegrasyon\' 																  ";
+        query += " when ([CR].[ReceiptType] = 23) then N\'23-Siparis Entegrasyon\' 																  ";
+        query += " when ([CR].[ReceiptType] = 24) then N\'24-Çek/Senet Entegrasyon\' 															  ";
+        query += " when ([CR].[ReceiptType] = 25) then N\'25-Banka Entegrasyon\' 																  ";
+        query += " when ([CR].[ReceiptType] = 30) then N\'30-Pos Entegrasyon\' 																	  ";
+        query += " when ([CR].[ReceiptType] = 40) then N\'40-Firma Kredi Kartı Fişi\' 															  ";
+        query += " when ([CR].[ReceiptType] = 41) then N\'41-Firma Kredi Kartı İade Fişi\' 														  ";
+        query += " when ([CR].[ReceiptType] = 42) then N\'42-Kredi Kartı Fişi\' 																	  ";
+        query += " when ([CR].[ReceiptType] = 43) then N\'43-Kredi Kartı İade Fişi\' 															  ";
+        query += " when ([CR].[ReceiptType] = 100) then N\'100-Tahsilat Dağıtım Fişi\' else N\'\' end  [fisTipi]   ";
+        query += " from "+tblName.ToString()+" [CR] with (nolock) where CR.RecId=\'"+recId.ToString()+"\'";
+
+    }
+    if(tblName=="FI_BankReceipt")
+    {
+        query = " select case  when ([BR].[ReceiptType] = 1) then N\'1-Banka İşlem Fişi\' 				";
+        query += " when ([BR].[ReceiptType] = 2) then N\'2-Virman Fişi\' 									";
+        query += " when ([BR].[ReceiptType] = 3) then N\'3-Gelen Havaleler\' 								";
+        query += " when ([BR].[ReceiptType] = 4) then N\'4-Gönderilen Havaleler\' 						";
+        query += " when ([BR].[ReceiptType] = 5) then N\'5-Banka Özel Fişi\' 								";
+        query += " when ([BR].[ReceiptType] = 6) then N\'6-Açılış Fişi\' 									";
+        query += " when ([BR].[ReceiptType] = 8) then N\'8-Döviz Satış Belgesi\' 							";
+        query += " when ([BR].[ReceiptType] = 9) then N\'9-Döviz Alım Belgesi\' else N\'\' end [fisTipi] 	";
+        query += " from "+tblName.ToString()+" [BR] with (nolock) where BR.RecId=\'"+recId.ToString()+"\'	";
+ }
+
+	if(tblName=="IM_Receipt")
+	{
+		query = " select  case  when ([IR].[ReceiptType] = 1) then N\'1-Mal Alım İrsaliyesi\' 					";
+		query += " when ([IR].[ReceiptType] = 2) then N\'2-Perakende Satış İade İrsaliyesi\' 					";
+		query += " when ([IR].[ReceiptType] = 3) then N\'3-Toptan Satış İade İrsaliyesi\' 						";
+		query += " when ([IR].[ReceiptType] = 4) then N\'4-Konsinye Çıkış İade İrsaliyesi\' 					";
+		query += " when ([IR].[ReceiptType] = 5) then N\'5-Konsinye Giriş İrsaliyesi\' 							";
+		query += " when ([IR].[ReceiptType] = 6) then N\'6-Fasona Giriş İrsaliyesi\' 							";
+		query += " when ([IR].[ReceiptType] = 7) then N\'7-Alınan Fiyat Farkı İrsaliyesi\' 						";
+		query += " when ([IR].[ReceiptType] = 8) then N\'8-Konsinye Satış Iadesi\' 								";
+		query += " when ([IR].[ReceiptType] = 9) then N\'9-Müstahsil İrsaliyesi\' 								";
+		query += " when ([IR].[ReceiptType] = 10) then N\'10-Üretim Fişi\' 										";
+		query += " when ([IR].[ReceiptType] = 11) then N\'11-Fason (Alınan) Giriş İrsaliyesi\' 					";
+		query += " when ([IR].[ReceiptType] = 12) then N\'12-Fason (Alınan) Çıkış İade İrsaliyesi\' 			";
+		query += " when ([IR].[ReceiptType] = 16) then N\'16-Sayım Fişi\' 										";
+		query += " when ([IR].[ReceiptType] = 17) then N\'17-Depo Transfer Fişi\' 								";
+		query += " when ([IR].[ReceiptType] = 18) then N\'18-Özel Fiş (Giriş)\' 								";
+		query += " when ([IR].[ReceiptType] = 20) then N\'20-Karma Koli Üretim\' 								";
+		query += " when ([IR].[ReceiptType] = 21) then N\'21-Karma Koli Sarf Bozma\' 							";
+		query += " when ([IR].[ReceiptType] = 22) then N\'22-Alınan Hizmet İrsaliyesi\' 						";
+		query += " when ([IR].[ReceiptType] = 23) then N\'23-Verilen Hizmet İadesi\' 							";
+		query += " when ([IR].[ReceiptType] = 40) then N\'40-Üretimden İade\' 									";
+		query += " when ([IR].[ReceiptType] = 70) then N\'70-Kullanıcı Tanımlı Giriş Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 71) then N\'71-Kullanıcı Tanımlı Giriş Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 72) then N\'72-Kullanıcı Tanımlı Giriş Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 73) then N\'73-Kullanıcı Tanımlı Giriş Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 74) then N\'74-Kullanıcı Tanımlı Giriş Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 75) then N\'75-Kullanıcı Tanımlı Giriş Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 76) then N\'76-Kullanıcı Tanımlı Giriş Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 77) then N\'77-Kullanıcı Tanımlı Giriş Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 78) then N\'78-Kullanıcı Tanımlı Giriş Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 79) then N\'79-Kullanıcı Tanımlı Giriş Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 99) then N\'99-Sayım Farkı Noksanı\' 								";
+		query += " when ([IR].[ReceiptType] = 101) then N\'101-Sayım Farkı Fazlası\' 							";
+		query += " when ([IR].[ReceiptType] = 120) then N\'120-Toptan Satış İrsaliyesi\' 						";
+		query += " when ([IR].[ReceiptType] = 121) then N\'121-Perakende Satış İrsaliyesi\' 					";
+		query += " when ([IR].[ReceiptType] = 122) then N\'122-Mal Alım İade İrsaliyesi\' 						";
+		query += " when ([IR].[ReceiptType] = 123) then N\'123-Konsinye Çıkış İrsaliyesi\' 						";
+		query += " when ([IR].[ReceiptType] = 124) then N\'124-Konsinye Giriş İade İrsaliyesi\' 				";
+		query += " when ([IR].[ReceiptType] = 125) then N\'125-Fasona Çıkış İrsaliyesi\' 						";
+		query += " when ([IR].[ReceiptType] = 126) then N\'126-Verilen Fiyat Farkı İrsaliyesi\' 				";
+		query += " when ([IR].[ReceiptType] = 127) then N\'127-Konsinye Satış İrsaliyesi (Depo Takibi)\' 		";
+		query += " when ([IR].[ReceiptType] = 130) then N\'130-Sarf Fişi\' 										";
+		query += " when ([IR].[ReceiptType] = 131) then N\'131-Fire Fişi\' 										";
+		query += " when ([IR].[ReceiptType] = 132) then N\'132-Özel Fiş (Çıkış)\' 								";
+		query += " when ([IR].[ReceiptType] = 133) then N\'133-Fason (Verilen) Giriş İadesi\' 					";
+		query += " when ([IR].[ReceiptType] = 134) then N\'134-Fason (Alınan) Çıkış İrsaliyesi\' 				";
+		query += " when ([IR].[ReceiptType] = 135) then N\'135-Transfer Çıkış\' 								";
+		query += " when ([IR].[ReceiptType] = 136) then N\'136-Karma Koli Sarf\' 								";
+		query += " when ([IR].[ReceiptType] = 137) then N\'137-Karma Koli Bozma\' 								";
+		query += " when ([IR].[ReceiptType] = 138) then N\'138-Verilen Hizmet İrsaliyesi\' 						";
+		query += " when ([IR].[ReceiptType] = 139) then N\'139-Alınan Hizmet İadesi\' 							";
+		query += " when ([IR].[ReceiptType] = 140) then N\'140-Üretime Çıkış Fişi\' 							";
+		query += " when ([IR].[ReceiptType] = 170) then N\'170-Kullanıcı Tanımlı Çıkış Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 171) then N\'171-Kullanıcı Tanımlı Çıkış Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 172) then N\'172-Kullanıcı Tanımlı Çıkış Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 173) then N\'173-Kullanıcı Tanımlı Çıkış Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 174) then N\'174-Kullanıcı Tanımlı Çıkış Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 175) then N\'175-Kullanıcı Tanımlı Çıkış Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 176) then N\'176-Kullanıcı Tanımlı Çıkış Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 177) then N\'177-Kullanıcı Tanımlı Çıkış Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 178) then N\'178-Kullanıcı Tanımlı Çıkış Fişi\' 					";
+		query += " when ([IR].[ReceiptType] = 179) then N\'179-Kullanıcı Tanımlı Çıkış Fişi\' 					";
+		query += " else N\'\' end  [fisTipi]																	";
+		query += " from "+tblName.ToString()+" IR with (nolock) where IR.RecId=\'"+recId.ToString()+"\'";
+	}
+	dt=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query);
+        if(dt == null || dt.Rows.Count &lt;= 0)
+			    return null; 
+	 tip_ = dt.Rows[0]["fisTipi"].ToString();	
+	return tip_;
+}
+</ScriptText>
+</ScriptDefinition>

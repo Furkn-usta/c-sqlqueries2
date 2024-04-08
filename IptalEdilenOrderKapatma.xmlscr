@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IptalEdilenOrderKapatma" Enabled="false" Priority="0" ScriptName="IptalEdilenOrderKapatma">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="TWorkOrderEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 27.01.2023 16:10:18
+
+function OnBeforePost(sender,eventArg)
+{
+
+    if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("Status")
+    || BaseObject.CurrentRow.Row.IsNull("IsClosed")
+    || Convert.ToInt32(BaseObject.CurrentRow.Row["Status"])!=4
+    || Convert.ToInt32(BaseObject.CurrentRow.Row["IsClosed"])!=0
+    || BaseObject.ActiveSession.Company.RecId!=3)
+		return null;
+		
+		BaseObject.CurrentRow.Row.SetField&lt;|int|&gt;("IsClosed",1);
+		
+}
+</ScriptText>
+</ScriptDefinition>

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FormYazdirmaEngeliOrderOnMaaliyet" Enabled="true" Priority="0" ScriptName="FormYazdirmaEngeliOrderOnMaaliyet">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderVM" />
+    <Event Enabled="true" EventName="BeforeCommandExecution" FunctionName="OnBeforeCommandExecution" ObjectName="TWorkOrderVM" />
+  </Events>
+  <Histories />
+  <ScriptText>
+function OnBeforeCommandExecution(sender, cmd)
+{
+	
+	if(cmd.CommandName != "TWorkOrderFormPrintCommand"  
+	|| BaseObject.ActiveEntity == null 
+	|| BaseObject.ActiveEntity.CurrentRow == null 
+	|| BaseObject.ActiveEntity.CurrentRow.Row == null 
+	|| !BaseObject.ActiveEntity.Data.Tables.Contains("MA_WorkOrder") 
+	|| BaseObject.ActiveEntity.CurrentRow.Row.IsNull("WorkOrderType") )
+		return null;
+	
+ 	count1 = BaseObject.ActiveEntity.Data.Tables["MA_WorkOrder"].Compute("Count(RecId)","isnull(InitialCostId,0)=0");
+ 
+
+ 	if(count1 &gt; 0)
+	{
+		BaseObject.SysManager.ActiveWindowManager.ShowMessage("ÖnMaliyet Girilmeden Form Yazdırılamaz..! {scr:FormYazdirmaEngeli}", ConstantStr.Warning, Zeta.Common.InformationMessages.MessageBoxButton.OK, Zeta.Common.InformationMessages.MessageBoxImage.Exclamation);
+		cmd.Cancel = true;
+		return null;
+	}
+}
+
+
+</ScriptText>
+</ScriptDefinition>

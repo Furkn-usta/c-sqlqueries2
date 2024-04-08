@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FaturaÖdemeVadesiBosOlamaz" Enabled="true" Priority="1" ScriptName="FaturaÖdemeVadesiBosOlamaz">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 23.01.2024 15:35:15 FaturaÖdemeVadesiBosOlamaz
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null
+	|| BaseObject.CurrentRow.Row.IsNull("ReceiptType")
+	|| Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"]) == 1)
+		return null;
+
+if(string.IsNullOrWhiteSpace(BaseObject.CurrentRow.Row["TermDate"].ToString()))
+	{
+		BaseObject.ShowMessage("Ödeme Vade Tarihi Boş Olamaz..{scr:VadeTarihiBosOlamaz}");
+		ev.Cancel = true;
+		return null;
+	}
+	if(Convert.ToDateTime(BaseObject.CurrentRow.Row["TermDate"])&lt;=Convert.ToDateTime(BaseObject.CurrentRow.Row["ReceiptDate"]))
+	{
+		BaseObject.ShowMessage("Ödeme Vade Tarihi Fiş Tarihinden Küçük Veya Eşit Olamaz..{scr:VadeTarihiBosOlamaz}");
+		ev.Cancel = true;
+		return null;
+	}
+}
+
+</ScriptText>
+</ScriptDefinition>

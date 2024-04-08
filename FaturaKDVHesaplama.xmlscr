@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="	FaturaKDVHesaplama		0	True" Enabled="true" Priority="0" ScriptName="FaturaKDVHesaplama">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforeCommandExecution" FunctionName="OnBeforeCommandExecution" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 1.12.2023 14:10:36
+kdv_top = " ";
+function OnBeforePost(sender,ev)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null
+	//||  BaseObject.CurrentRow.Row.IsNull("ReceiptType")	|| Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])!=120
+	 || BaseObject.CurrentRow.Row.IsNull("IsTaxExempted")
+	 || BaseObject.CurrentRow.Row.IsNull("IsExportRegistered") )
+	return null; 	
+//	MessageBox.Show( BaseObject.CurrentRow.Row["IsTaxExempted"].ToString());
+//	MessageBox.Show( BaseObject.CurrentRow.Row["IsExportRegistered"].ToString());
+	 if( BaseObject.CurrentRow.Row["IsTaxExempted"].ToString()=="True" &amp;&amp; BaseObject.CurrentRow.Row["IsExportRegistered"].ToString()=="True")
+{
+	toplam=0m;
+	foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null"))
+		{UnitPrice=0m;
+		VatRate	=0m;	
+		Quantity=0m;	
+ 		if(!dr.IsNull("Quantity"))
+	 Quantity=Convert.ToDecimal(dr["Quantity"]);
+		 if(!dr.IsNull("VatRate"))
+	 VatRate=Convert.ToDecimal(dr["VatRate"]);
+		 if(!dr.IsNull("UnitPrice"))
+	 UnitPrice=Convert.ToDecimal(dr["UnitPrice"]);
+		 toplam+=(((UnitPrice*Quantity)*VatRate)/100);
+		} 
+		global:kdv_top = toplam.ToString("#######.0000");
+	BaseObject.CurrentRow.Row.SetField&lt;|String|&gt;("Explanation", toplam.ToString("#######.0000")); //genel alanına istenen renk kodu yazılacak
+	
+}
+}
+function OnBeforeCommandExecution(sender, cmd)
+{
+  
+
+	if(cmd.CommandName != "EInvoiceCreateCommand"
+    || BaseObject.ActiveEntity == null 
+    || BaseObject.ActiveEntity.CurrentRow == null
+    || BaseObject.ActiveEntity.CurrentRow.Row == null
+    || BaseObject.ActiveEntity.CurrentRow.Row.IsNull("IsTaxExempted")
+	 || BaseObject.ActiveEntity.CurrentRow.Row.IsNull("IsExportRegistered") )
+    	return null;
+    	 if( BaseObject.ActiveEntity.CurrentRow.Row["IsTaxExempted"].ToString()=="True" &amp;&amp; BaseObject.ActiveEntity.CurrentRow.Row["IsExportRegistered"].ToString()=="True")
+{
+     if(!BaseObject.ActiveEntity.CurrentRow.Row.IsNull("UD_EInvoiceExplanation"))
+     aa = BaseObject.ActiveEntity.CurrentRow.Row["UD_EInvoiceExplanation"].ToString();
+     //global:kdv_top
+     BaseObject.ActiveEntity.CurrentRow.Row.SetField &lt;|String|&gt;("UD_EInvoiceExplanation" ,aa+
+		     Environment.NewLine+	global:kdv_top.ToString());
+     } 
+   }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    </ScriptText>
+</ScriptDefinition>

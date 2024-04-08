@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İş Emrinden faturaya rota taşima" Enabled="true" Priority="0" ScriptName="InvoiceFieldTransport">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="ColumnChanged" FunctionName="OnColumnChanged" ObjectName="InvoiceEN" />
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="ColumnChanged" FunctionName="OnColumnChanged" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 31.10.2015 13:06:13
+
+function OnColumnChanged(sender, eventArg)
+{
+	if (BaseObject!=null &amp;&amp; BaseObject.CurrentRow != null 
+	   &amp;&amp; eventArg.Row.Table.TableName == "IM_ReceiptItem" 
+	   &amp;&amp; (eventArg.Column.ColumnName=="WorkOrderReceiptItemId" 
+	   || eventArg.Column.ColumnName=="InventoryId" )
+	   &amp;&amp; !eventArg.Row.IsNull("WorkOrderReceiptItemId")) 
+		{
+		   str="select  isnull(r.RouteCode,\'\') RouteCode ,isnull(r.RouteName,\'\') RouteName, ";
+		   str+="isnull((select isnull(P.ProcessName,\'\')+\' + \'  from MA_RouteItem RI  left join MA_Process P with (nolock) on P.RecId=RI.ProcessId where RI.RouteId=wi.RouteId and RI.InUse=1 for xml path(\'\'))  ,\'\') RotaIslemler ";
+		   str+="from MA_WorkOrderItem wi with (nolock)   ";
+		   str+="left join MA_Route r with (nolock) on r.RecId=wi.RouteId where wi.RecId = "+eventArg.Row["WorkOrderReceiptItemId"];
+			dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "MA_WorkOrderItem",str);
+			
+			if(dt!=null &amp;&amp; dt.Rows.Count&gt;0)
+			{
+				eventArg.Row.SetField&lt;|string|&gt;("UD_RotaKodu",dt.Rows[0][dt.Columns["RouteCode"]].ToString());
+			    eventArg.Row.SetField&lt;|string|&gt;("UD_RouteName", dt.Rows[0][dt.Columns["RouteName"]].ToString());
+			    eventArg.Row.SetField&lt;|string|&gt;("UD_EInvoiceItemExplanation"," "+ dt.Rows[0][dt.Columns["RouteName"]].ToString());
+			}
+		}
+}</ScriptText>
+</ScriptDefinition>

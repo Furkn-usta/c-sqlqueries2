@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FisSatırınaTahsisiAtama" Enabled="true" Priority="0" ScriptName="FisSatırnaTahsisAtama">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 9.01.2023 15:14:57
+function OnBeforePost(sender, ev)
+{ 
+if(BaseObject == null || BaseObject.CurrentRow == null || BaseObject.CurrentRow.Row == null || Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])!=1)
+		return null;
+foreach( ri in BaseObject.Data.Tables["IM_ReceiptItem"].Rows)
+		{	
+				
+	query="Select I.InventoryName,wo.WorkOrderNo from IM_ItemAllocation IA left join MA_WorkOrderItem woi  with(nolock) on IA.WorkOrderItemId=woi.RecId left join MA_WorkOrder wo with (nolock) on woi.WorkOrderId=wo.RecId left join IM_Item I with (nolock) on I.RecId=IA.InventoryId   where IA.InventoryReceiptItemId="+ri["RecId"].ToString();
+	 dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt", query);
+	 if(dt!=null &amp;&amp; dt.Rows.Count &gt;0 )
+	 {
+	 
+	 MessageBox.Show(query.ToString());
+	 veri=String.Empty;
+	 veri2=String.Empty;
+	 
+			for(l_i =0;l_i &lt; dt.Rows.Count;l_i++)
+ 		{veri+="  "+dt.Rows[l_i][0].ToString()+" ";
+ 		veri2+="  "+dt.Rows[l_i][1].ToString()+" ";
+		}
+			ri.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation","Model No: "+veri.ToString()+"Order  No: "+veri2.ToString());
+}
+else			ri.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation"," ");
+{
+}
+}
+
+}</ScriptText>
+</ScriptDefinition>

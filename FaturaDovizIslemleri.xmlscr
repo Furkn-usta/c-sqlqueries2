@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FaturaDovizIslemleri" Enabled="true" Priority="0" ScriptName="FaturaDovizIslemleri">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 7.12.2021 17:09:17
+
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null || BaseObject.CurrentRow == null || BaseObject.CurrentRow.Row == null )
+		return null;
+		
+	BaseObject.CurrentRow.Row.SetField&lt;|bool|&gt;("UD_IsForex", BaseObject.CurrentRow.Row["IsForexEInvoice"]);
+ 
+ 
+	foreach( ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select(""))
+	{
+
+	        
+	if(string.IsNullOrWhiteSpace(ri["Explanation"].ToString()))
+	        ri.SetField&lt;|string|&gt;("Explanation", "."); 
+	      
+	    
+	      	
+	        
+	       if(!BaseObject.CurrentRow.Row.IsNull("IsForexEInvoice") &amp;&amp; BaseObject.CurrentRow.Row["IsForexEInvoice"].ToString() == "True" &amp;&amp; !string.IsNullOrWhiteSpace(ri["UnitPrice"].ToString()) &amp;&amp; !string.IsNullOrWhiteSpace(ri["ForexUnitPrice"].ToString()) &amp;&amp; !string.IsNullOrWhiteSpace(ri["ForexCode"].ToString()))
+	       {
+				s = "|UnitPrice=" + ri["UnitPrice"].ToString(System.Globalization.CultureInfo.InvariantCulture) + "|ForexUnitPrice=" + ri["ForexUnitPrice"].ToString(System.Globalization.CultureInfo.InvariantCulture) + "|ForexCode=" + ri["ForexCode"].ToString();
+	            ri.SetField&lt;|string|&gt;("UD_EInvoiceItemExplanation", s); 
+	       }else 
+	       {
+		
+	           ri.SetField&lt;|string|&gt;("UD_EInvoiceItemExplanation", "|UnitPrice="+ri["UnitPrice"].ToString(System.Globalization.CultureInfo.InvariantCulture)+"|"); 
+	       }
+	 }
+}</ScriptText>
+</ScriptDefinition>

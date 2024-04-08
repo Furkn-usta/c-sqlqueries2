@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="Kesim Fazla" Enabled="true" Priority="0" ScriptName="Kesim Fazla">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderProductionEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="TWorkOrderProductionEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 3.02.2016 15:05:51
+function OnAfterSucceededPost (sender,eventArg)
+{
+	if (BaseObject != null &amp;&amp; BaseObject.CurrentRow != null &amp;&amp; BaseObject.CurrentRow.Row != null &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("SubNo") &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("WorkOrderItemId"))
+	{
+	   dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt", "select Quantity from MA_WorkOrderItemVariant where SubNo&lt;1000 and WorkOrderItemId =( select RecId from MA_WorkOrderItem where SubNo=\'"+BaseObject.CurrentRow.Row["SubNo"].ToString()+"\' and ParentItemId is null and WorkOrderSubType=2 and WorkOrderId= (select WorkOrderId from MA_WorkOrderItem where RecId="+Convert.ToInt32(BaseObject.CurrentRow.Row["WorkOrderItemId"])+") )");
+	   dtkesim=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt","(select sum(A.Kesim) as Quantity  from (select ww.WorkOrderNo [OrderNo],(select sum( wop.Quantity) from MA_WorkOrderProduction wop where wop.WorkOrderItemId=woi.RecId and ri.InventoryId=wop.InventoryId and ri.ItemNo=wop.RecipeItemNo and wop.ProductionType=100 and wop.SubNo=wi.SubNo and ProcessId=1 and wop.IsRepair=0) [Kesim],ROW_Number() over (partition by ww.WorkOrderNo,wi.SubNo,ri.IsMaster,ri.InventoryId order by ww.WorkOrderNo,wi.SubNo,ri.IsMaster,ri.InventoryId) [Sıra] from MA_WorkOrder ww left join MA_WorkOrderItem woi on woi.WorkOrderId=ww.RecId left join MA_WorkOrderItem wi on wi.WorkOrderId=ww.RecId left join MA_WorkOrderProduction wo on wo.WorkOrderItemId=woi.RecId and wi.SubNo=wo.SubNo left join MA_RecipeItem ri on ri.OwnerInventoryId = ww.InventoryId  and wo.InventoryId=ri.InventoryId and ri.IsMaster=1 where woi.ParentItemId is null and woi.WorkOrderSubType=1 and wi.WorkOrderSubType =2  and woi.RecId="+Convert.ToInt32(BaseObject.CurrentRow.Row["WorkOrderItemId"])+" and wo.SubNo=\'"+BaseObject.CurrentRow.Row["SubNo"].ToString()+"\' and ww.CompanyId=2 )A  where A.Sıra=1 and A.Kesim is not null  )");
+	   dtorder=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt","select WorkOrderNo from MA_WorkOrder where   RecId=(select woi.WorkOrderId from MA_WorkOrderItem woi where woi.RecId ="+Convert.ToInt32(BaseObject.CurrentRow.Row["WorkOrderItemId"])+") ");	
+	   dtrenk=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt", " select OperationCode from MA_WorkOrderItem where SubNo=\'"+BaseObject.CurrentRow.Row["SubNo"].ToString()+"\' and ParentItemId is null and WorkOrderSubType=2 and WorkOrderId= (select WorkOrderId from MA_WorkOrderItem where RecId="+Convert.ToInt32(BaseObject.CurrentRow.Row["WorkOrderItemId"])+" )");
+	   dtkesilecek = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt", "select sum(Quantity) from MA_WorkOrderItemVariant where SubNo&gt;1000 and WorkOrderItemId =( select RecId from MA_WorkOrderItem where SubNo=\'"+BaseObject.CurrentRow.Row["SubNo"].ToString()+"\' and ParentItemId is null and WorkOrderSubType=2 and WorkOrderId= (select WorkOrderId from MA_WorkOrderItem where RecId="+Convert.ToInt32(BaseObject.CurrentRow.Row["WorkOrderItemId"])+") )");
+	   dttasnif=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt", "select sum(Quantity) from MA_WorkOrderProduction where ProcessId=2 and InOut=1 and WorkOrderItemId="+Convert.ToInt32(BaseObject.CurrentRow.Row["WorkOrderItemId"])+" ");
+	   	
+	   orderno="";
+	   renk ="";
+	   tasnif="";
+	   
+	  
+	    if(dtrenk!=null &amp;&amp;  dtrenk.Rows.Count&gt;0){
+          
+           renk=dtrenk.Rows[0]["OperationCode"].ToString();
+
+       	}
+       if(dtorder!=null &amp;&amp;  dtorder.Rows.Count&gt;0){
+           
+           
+           orderno=dtorder.Rows[0]["WorkOrderNo"].ToString(); 
+       	}
+       	
+       	 if(dttasnif!=null &amp;&amp;  dttasnif.Rows.Count&gt;0){
+           
+           
+           tasnif=dttasnif.Rows[0][0].ToString(); 
+       	}
+		
+		i=0;
+		j=0;
+		k=0;
+        m=0;
+		toplamKesilecek=0;
+		toplamKesilecek=0;
+		toplamKesim=0;
+		siparismiktari=0;
+        tasnifsaglam=0;
+		while(dt!=null &amp;&amp; i&lt; dt.Rows.Count){
+           siparismiktari+=Convert.ToInt32(dt.Rows[i][0]);
+           i++;
+       	}
+
+       	while(dtkesilecek!=null &amp;&amp; k&lt; dtkesilecek.Rows.Count){
+          toplamKesilecek+=Convert.ToInt32(dtkesilecek.Rows[k][0]);
+          k++;           
+       	}
+       	while(dtkesim!=null &amp;&amp; j&lt; dtkesim.Rows.Count){           
+        toplamKesim=toplamKesim+Convert.ToInt32(dtkesim.Rows[j][0]);          
+          j++;                   
+       	}
+        while(dttasnif!=null &amp;&amp; m&lt; dttasnif.Rows.Count){
+        tasnifsaglam+=tasnifsaglam+Convert.ToInt32(dttasnif.Rows[m][0]);            
+          m++;           
+       	}
+       	        
+            
+       	if(tasnifsaglam&gt;toplamKesilecek){
+        fazlaadet=tasnifsaglam-toplamKesilecek;
+        taskm=BaseObject.Container.Resolve&lt;|TaskMessageService|&gt;("TaskMessageService");
+     	taskm.SendEmail("ebruhardal@seteks.net"," Order No : "+orderno.ToString()+"  Renk : "+renk.ToString()+"Kesim Adedi %10 dan fazladır. "," Order No : "+orderno.ToString()+"  Renk : "+renk.ToString()+" Sipariş Miktarı : "+siparismiktari.ToString()+"  Kesilen  Adet : "+toplamKesim.ToString() +" Kesilecek Adet : "+toplamKesilecek.ToString()+" %10 Fazlası Adet : "+fazlaadet.ToString()+"Sağlam Adet : "+tasnif.ToString());
+       	taskm.SendEmail("akseusar@seteks.net"," Order No : "+orderno.ToString()+"  Renk : "+renk.ToString()+"Kesim Adedi %10 dan fazladır. "," Order No : "+orderno.ToString()+"  Renk : "+renk.ToString()+" Sipariş Miktarı : "+siparismiktari.ToString()+"  Kesilen  Adet : "+toplamKesim.ToString() +" Kesilecek Adet : "+toplamKesilecek.ToString()+" %10 Fazlası Adet : "+fazlaadet.ToString()+"Sağlam Adet : "+tasnif.ToString());
+        taskm.SendEmail("esref@seteks.net"," Order No : "+orderno.ToString()+"  Renk : "+renk.ToString()+"Kesim Adedi %10 dan fazladır. "," Order No : "+orderno.ToString()+"  Renk : "+renk.ToString()+" Sipariş Miktarı : "+siparismiktari.ToString()+"  Kesilen  Adet : "+toplamKesim.ToString() +" Kesilecek Adet : "+toplamKesilecek.ToString()+" %10 Fazlası Adet : "+fazlaadet.ToString()+"Sağlam Adet : "+tasnif.ToString());
+        taskm.SendEmail("kubilay@seteks.net"," Order No : "+orderno.ToString()+"  Renk : "+renk.ToString()+"Kesim Adedi %10 dan fazladır. "," Order No : "+orderno.ToString()+"  Renk : "+renk.ToString()+" Sipariş Miktarı : "+siparismiktari.ToString()+"  Kesilen  Adet : "+toplamKesim.ToString() +" Kesilecek Adet : "+toplamKesilecek.ToString()+" %10 Fazlası Adet : "+fazlaadet.ToString()+"Sağlam Adet : "+tasnif.ToString());
+        
+        /*	
+       	*/
+       	 //BaseObject.ShowMessage(" Order No : "+orderno.ToString()+"  Renk : "+renk.ToString()+" Sipariş Miktarı : "+siparismiktari.ToString()+"  Kesilen  Adet : "+toplamKesim.ToString() +" Kesilecek Adet : "+toplamKesilecek.ToString()+" %10 Fazlası Adet : "+fazlaadet.ToString() );
+       	  
+       	}
+        
+    }
+	
+}</ScriptText>
+</ScriptDefinition>

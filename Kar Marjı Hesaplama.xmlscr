@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="MaliyetKarMarjı" Enabled="false" Priority="1" ScriptName="MaliyetKarMarjı">
+  <Events>
+    <Event Enabled="true" ObjectName="InitialCostEN" />
+    <Event Enabled="true" EventName="ColumnChanged" FunctionName="OnColumnChanged" ObjectName="InitialCostEN" />
+    <Event Enabled="true" />
+    <Event Enabled="true" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 4.11.2022 17:33:42
+bisey = false;
+function OnColumnChanged(sender, ev) 
+{
+
+ if(global:bisey)
+    return null;
+    
+  if(BaseObject.Name!="InitialCostEN" || ev.Row.Table.TableName != "MA_InitialCost" )
+     return null;
+   
+  if(ev.Row.IsNull("CalculatedPrice") || Convert.ToDecimal(ev.Row["CalculatedPrice"])&lt;0m)
+     return null;
+     
+   if(ev.Row.IsNull("GivenPrice") || Convert.ToDecimal(ev.Row["GivenPrice"])&lt;0m)
+     return null;
+ 
+    gpf=0m;	 
+    gpfd=0m;	 
+    gpfdd=0m;	
+    xx=0m;
+    yy=0m;
+    kar=0m;
+	verilen_fiyat=0m;
+    ver_fiy=0m;
+ 
+if(ev.Column.ColumnName=="GivenPrice")
+{
+if(!ev.Row.IsNull("GivenPrice") &amp;&amp; Convert.ToDecimal(ev.Row["GivenPrice"])&gt;0m)
+		 ver_fiy=Convert.ToDecimal(ev.Row["GivenPrice"]);
+		 if(Convert.ToDecimal(ev.Row["GivenPrice"])==0)
+			 return null;
+ver_fiy_dov=0m;
+if(!ev.Row.IsNull("GivenPriceForexRate") &amp;&amp; Convert.ToDecimal(ev.Row["GivenPriceForexRate"])&gt;0m)
+		 ver_fiy_dov=Convert.ToDecimal(ev.Row["GivenPriceForexRate"]);
+
+hes_fiy=0m;
+if(!ev.Row.IsNull("CalculatedPrice") &amp;&amp; Convert.ToDecimal(ev.Row["CalculatedPrice"])&gt;0m)
+		 hes_fiy=Convert.ToDecimal(ev.Row["CalculatedPrice"]);
+
+for_1=0m;
+if(!ev.Row.IsNull("ForexRate") &amp;&amp; Convert.ToDecimal(ev.Row["ForexRate"])&gt;0m)
+		 for_1=Convert.ToDecimal(ev.Row["ForexRate"]);
+
+
+for_2=0m;
+if(!ev.Row.IsNull("Forex2Rate") &amp;&amp; Convert.ToDecimal(ev.Row["Forex2Rate"])&gt;0m)
+		 for_2=Convert.ToDecimal(ev.Row["Forex2Rate"]);
+
+}
+
+if(ev.Column.ColumnName=="GivenPrice" &amp;&amp; Convert.ToString(ver_fiy_dov)!="0")
+{
+
+	global:bisey=true;
+
+
+   verilen_fiyat_top=Convert.ToDecimal(ver_fiy_dov)*Convert.ToDecimal(ver_fiy);
+   
+   gercek_kar=Convert.ToDecimal(verilen_fiyat_top)-Convert.ToDecimal(hes_fiy);
+   			 
+   kar_marji=(Convert.ToDecimal(gercek_kar)/Convert.ToDecimal(ver_fiy_dov));
+   
+   kkar_marji=((Convert.ToDecimal(kar_marji)/Convert.ToDecimal(ver_fiy))*100);
+   
+   ev.Row.SetField&lt;|string|&gt;("UD_KarMarji",Convert.ToDecimal(kkar_marji).ToString("0.##")); 
+
+		
+	global:bisey=false;
+	
+}
+
+
+if(ev.Column.ColumnName=="GivenPrice" &amp;&amp; ver_fiy_dov==0)
+{
+
+	global:bisey=true;
+
+   verilen_fiyat_top=1*Convert.ToDecimal(ver_fiy);
+   
+   gercek_kar=Convert.ToDecimal(verilen_fiyat_top)-Convert.ToDecimal(hes_fiy);
+   
+   kar_marji=(Convert.ToDecimal(gercek_kar)/1);
+   
+   kkar_marji=((Convert.ToDecimal(kar_marji)/Convert.ToDecimal(ver_fiy))*100);
+   
+   ev.Row.SetField&lt;|string|&gt;("UD_KarMarji",Convert.ToDecimal(kkar_marji).ToString("0.##")); 
+
+		
+	global:bisey=false;
+	
+}
+
+
+
+
+
+}</ScriptText>
+</ScriptDefinition>

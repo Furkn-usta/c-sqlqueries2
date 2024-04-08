@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliye bilgi taşima" Enabled="true" Priority="0" ScriptName="IrsaliyeBilgiTasima">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories>
+    <History EditedBy="Murat Yildirim" EntryDate="2021-11-03T00:00:00">
+      <Change>[3.11.2021]
+
+-Sevk İrsaliyesi üzerinde çalişacak şekilde ayarlandi.
+-Fatura üzerinde çalişmasini sağlayan event kaldirildi.
+-Çikti verisi düzenlendi.</Change>
+    </History>
+  </Histories>
+  <ScriptText>/*
+Generated on 25.10.2021 09:47:12
+
+Talep Eden: Fahrettin
+
+Order ve çeki listesi üzerindeki alanlari birleştirilmiş çeki üzerinden oluşturulmuş irsaliye/fatura kaydi satirlarinda bulunan UD_EInvoiceItemExplanation alanina yazar.
+*/
+
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null || BaseObject.CurrentRow == null ||BaseObject.CurrentRow.Row == null)
+		return null;
+
+	foreach( ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("PackagingListItemId is not null AND WorkOrderReceiptItemId is not null") )
+	{
+		if(ri.RowState != DataRowState.Deleted &amp;&amp; ri.RowState != DataRowState.Detached)
+		{		
+			q = "SELECT isnull(WO.UD_KumasKom,\'\') [KK], ISNULL(PL.UD_BrutKg, 0) [BK], ISNULL(PL.UD_NetKg, 0) [NK] FROM IM_PackagingList PL with (nolock) LEFT JOIN MA_WorkOrder WO with (nolock) on WO.RecId = (SELECT WorkOrderId FROM MA_WorkOrderItem WHERE RecId = " + ri["WorkOrderReceiptItemId"].ToString() + " ) WHERE PL.RecId = (SELECT PackagingListId FROM IM_PackagingListItem WHERE RecId= " + ri["PackagingListItemId"].ToString() + ")";
+			r = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "r",q); 
+			
+			if(r != null &amp;&amp; r.Rows.Count &gt; 0)
+			{
+				bStr =  r.Rows[0]["KK"] + " - Net Kg: " + System.Math.Round(Convert.ToDecimal(r.Rows[0]["NK"]), 2).ToString() + " Brüt Kg: " + System.Math.Round(Convert.ToDecimal(r.Rows[0]["BK"]), 2).ToString();
+			
+				bIsNullStr = string.IsNullOrWhiteSpace(ri["UD_EInvoiceItemExplanation"].ToString());
+				
+				if(bIsNullStr || !ri["UD_EInvoiceItemExplanation"].ToString().Contains(bStr))
+				{
+					seperator = "";
+					if(!bIsNullStr)
+						seperator = " - ";
+					
+					ri.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation", ri["UD_EInvoiceItemExplanation"] + seperator + bStr);
+				}
+			}
+		}
+	}
+}</ScriptText>
+</ScriptDefinition>

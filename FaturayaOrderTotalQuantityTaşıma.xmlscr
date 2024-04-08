@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FaturayaAlan" Enabled="true" Priority="0" ScriptName="FaturayaAlan">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 1.08.2022 11:45:56
+function OnBeforePost(sender,ev)
+{
+	if(BaseObject == null || BaseObject.CurrentRow == null || BaseObject.CurrentRow.Row == null
+	||  BaseObject.CurrentRow.Row.IsNull("ReceiptType")	|| Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])!=120)
+	return null; 	
+	foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null"))
+		{			
+	
+	a="select w.Quantity from IM_Invoice i with (nolock) left join IM_Receipt r with (nolock) on r.InvoiceId=i.RecId left join IM_ReceiptItem iri with (nolock) on iri.InventoryReceiptId=r.RecId left join MA_WorkOrderItem woi with (nolock) on woi.RecId=iri.WorkOrderReceiptItemId left join MA_WorkOrder w on w.RecId=woi.WorkOrderId where  iri.RecId="+dr["RecId"];
+	b=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "b",a); 
+		
+			if(!b.Rows[0].IsNull("Quantity"))
+			dr.SetField&lt;|string|&gt;("UD_Data", b.Rows[0]["Quantity"].ToString());
+		}
+}
+				
+</ScriptText>
+</ScriptDefinition>

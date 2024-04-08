@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KesimKartıMail" Enabled="true" Priority="0" ScriptName="KesimKartıMail">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderCuttingProductionEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="TWorkOrderCuttingProductionEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 7.11.2023 14:17:06
+function OnBeforePost(sender,ev)
+{
+if(BaseObject==null
+||BaseObject.CurrentRow==null
+||BaseObject.CurrentRow.Row==null
+||BaseObject.CurrentRow.Row.IsNull("WorkOrderItemId")
+||BaseObject.CurrentRow.Row.IsNull("InventoryId"))
+return null;
+
+
+		quantity=0m;	
+		receipeQuantity=0m;
+        orderNo="";
+        model="";
+        kayitEden=BaseObject.ActiveSession.User.UserCode.ToString()+" - "+BaseObject.ActiveSession.User.UserName.ToString();
+		query="select isnull(wo.RecipeQuantity,0),isnull(wo.WorkOrderNo,\'\') from MA_WorkOrderItem woi with (nolock) left join MA_WorkOrder wo with (nolock) on wo.RecId=woi.WorkOrderId  where woi.RecId="+BaseObject.CurrentRow.Row["WorkOrderItemId"].ToString();
+        dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt", query);
+	 	 if(dt!=null &amp;&amp; dt.Rows.Count&gt;0 )
+		{	receipeQuantity=Convert.ToDecimal(dt.Rows[0][0]);
+	    	orderNo=dt.Rows[0][1].ToString();
+            MessageBox.Show(query.ToString());
+        }
+		query2="select sum(wop.Quantity),isnull(I.InventoryCode,\'\')+\' -- \'+isnull(I.InventoryName,\'\')  from MA_WorkOrderItem woi with (nolock) left join MA_WorkOrderProduction wop with (nolock) on wop.WorkOrderItemId=woi.RecId left join IM_Item I with (nolock) on I.RecId=woi.InventoryId where wop.ProductionType=100 and    wop.InventoryId="+BaseObject.CurrentRow.Row["InventoryId"]+" and woi.RecId="+BaseObject.CurrentRow.Row["WorkOrderItemId"].ToString()+"group by I.InventoryCode,I.InventoryName";		
+	      MessageBox.Show(query2.ToString());
+	        dt2 = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt2", query2);
+	 	 if(dt2!=null &amp;&amp; dt2.Rows.Count&gt;0 )
+	    {	quantity=Convert.ToDecimal(dt2.Rows[0][0]); 
+            model=dt2.Rows[0][1].ToString(); 
+          
+		}	 
+			if(quantity&gt;receipeQuantity) 
+			 	 {
+			 		mail="&lt;!DOCTYPE html&gt;  &lt;html&gt;";
+                    mail+="&lt;head&gt;";	
+                    mail+="&lt;style&gt;";
+                    mail+="    table{";
+                    mail+="      border: 1px solid;";
+                    mail+="       width: 500px;";
+                    mail+="       height: 250px;";
+                    mail+="        text-align: center;";
+                    mail+="        color:#fff;";
+                    mail+="     }";
+                    mail+="     table td{";
+                    mail+="         border: 3px solid #000000;";
+                    mail+="        color: #000000;";
+                    mail+="     }";
+                    mail+="   #tablo-baslik{";
+                    mail+="         font-weight: 700;";
+                    mail+="     }";
+                    mail+="    &lt;/style&gt;   &lt;/head&gt; ";
+ 	                mail+="&lt;body&gt;";
+                    mail+="&lt;table&gt;";
+                    mail+="                   &lt;tr&gt;                   &lt;td&gt;&lt;h3&gt;Order No&lt;/h3&gt;&lt;/td&gt;                   &lt;td&gt;&lt;h3&gt;Model&lt;/h3&gt;&lt;/td&gt;            &lt;td&gt;&lt;h3&gt;Kesilecek Adet&lt;/h3&gt;&lt;/td&gt;     &lt;td&gt;&lt;h3&gt;Kesim Adet&lt;/h3&gt;&lt;/td&gt;       &lt;/tr&gt;     ";
+                    mail+="              &lt;tr&gt;";
+                    mail+="                     &lt;td&gt;"+orderNo+"&lt;/td&gt;";
+                    mail+="                     &lt;td&gt;"+model+"&lt;/td&gt;";
+                    mail+="                     &lt;td&gt;"+receipeQuantity.ToString("##.##")+"&lt;/td&gt;";
+                    mail+="                     &lt;td&gt;"+quantity.ToString("##.##")+"&lt;/td&gt;";
+                    mail+="              &lt;/tr&gt;";
+                    mail+=" &lt;/table&gt;";
+                    mail+=" &lt;/body&gt;";
+                    mail+="&lt;/html&gt; &lt;br/&gt;";
+                  MessageBox.Show(mail.ToString());
+                	mailMessage=orderNo.ToString()+" nolu Orderın Kesim Adeti Kesilecek Adetten Fazladır. &lt;br&gt;&lt;br/&gt; Not: Lütfen Tedarik Hesaplamasını Kontrol ediniz. ";
+	    	        taskm=BaseObject.Container.Resolve&lt;|TaskMessageService|&gt;("TaskMessageService");   
+		            taskm.SendEmail("satinalma@actekstil.com.tr",orderNo.ToString() +" nolu Kesim ",mail.ToString()+"   "+mailMessage.ToString());     
+				 }
+			 
+	 
+        
+}</ScriptText>
+</ScriptDefinition>

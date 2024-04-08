@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İngilizceÇevirmeVeHarfBüyüme" Enabled="true" Priority="0" ScriptName="İngilizceÇevirmeVeHarfBüyüme">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 18.09.2023 09:15:45 İngilizceÇevirmeVeHarfBüyüme
+/*
+	Kumaş ve Aksesuar kartlarında adı ve kodu kısımında yazılanları otomatik olarak büyük harf ve ingilizce karaktere çevirir.
+*/
+function OnBeforePost(sender, ev)
+{
+    if (BaseObject == null 
+    || BaseObject.CurrentRow == null
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("InventoryName")
+    || BaseObject.CurrentRow.Row.IsNull("InventoryCode"))
+        return null;
+
+    if (BaseObject.CurrentRow.Row["AccessCode"].ToString() == "YARN")
+        return null;
+        
+	if(BaseObject.CurrentRow.Row["AccessCode"].ToString()=="TRIM" || BaseObject.CurrentRow.Row["AccessCode"].ToString()=="FABRIC")
+	{
+	    name_ = BaseObject.CurrentRow.Row["InventoryName"].ToString().Trim();
+	    name_ = name_.ToUpper();
+	    code_ = BaseObject.CurrentRow.Row["InventoryCode"].ToString().Trim();
+ 		code_ = code_.ToUpper();
+	    convertedText = ConvertToEnglishChars(name_);
+	    convertedCodeText = ConvertToEnglishChars(code_);
+	    
+	   // MessageBox.Show(convertedText);
+	    BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("InventoryName",convertedText);
+	     BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("InventoryCode",convertedCodeText);
+    }
+}
+
+function ConvertToEnglishChars(input)
+{
+    // Türkçe karakterleri İngilizce karakterlere dönüştür
+    input = input.Replace("Ç", "C")
+                 .Replace("ç", "c")
+                 .Replace("Ğ", "G")
+                 .Replace("ğ", "g")
+                 .Replace("İ", "I")
+                 .Replace("ı", "i")
+                 .Replace("Ö", "O")
+                 .Replace("ö", "o")
+                 .Replace("Ş", "S")
+                 .Replace("ş", "s")
+                 .Replace("Ü", "U")
+                 .Replace("ü", "u");
+
+    return input;
+}</ScriptText>
+</ScriptDefinition>

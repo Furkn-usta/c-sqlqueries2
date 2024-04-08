@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="Fatura Döviz Atama" Enabled="true" Priority="0" ScriptName="Fatura Döviz Atama">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="ColumnChanged" FunctionName="OnColumnChanged" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 09.01.2018 09:56:26
+
+function OnColumnChanged(sender, eventArg)
+{
+	{
+		if (eventArg.Row != null &amp;&amp; eventArg.Column.Table.TableName == "IM_Invoice" &amp;&amp; eventArg.Column.ColumnName == "CurrentAccountId")
+        {
+         	 BaseObject.CurrentRow.Row.SetField&lt;|int|&gt;("IsForexEInvoice",1 );	               
+        }
+	}
+}</ScriptText>
+</ScriptDefinition>

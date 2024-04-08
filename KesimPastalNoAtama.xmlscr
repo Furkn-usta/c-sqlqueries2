@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KesimPastalNoAtama" Enabled="true" Priority="0" ScriptName="KesimPastalNoAtama">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderCuttingProductionVM" />
+    <Event Enabled="true" EventName="BeforeCommandExecution" FunctionName="OnBeforeCommandExecution" ObjectName="TWorkOrderCuttingProductionVM" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 10.08.2022 11:28:45
+
+function OnBeforeCommandExecution (sender,e)
+{
+
+    if(e.CommandName == "TWorkOrderCuttingProductionUpdateCommand" &amp;&amp; BaseObject != null &amp;&amp; !BaseObject.fp_IsCuttingPlanning)
+    {
+    
+ 	 	if(BaseObject.ItemDetailDataTable == null || BaseObject.ItemDetailDataTable.Rows.Count == 0)
+ 	 		return null;
+	
+		l_value=0;
+		l_valueMax=0;
+		l_valueMaxString=string.Empty;
+	 	foreach (mrow in BaseObject.ItemDetailDataTable.Select("WorkOrderItemId is not null", "MarkerNo"))
+		{
+	    	if (mrow.RowState == DataRowState.Deleted || mrow.RowState == DataRowState.Detached)
+	        	continue;
+	        if(!mrow.IsNull("MarkerNo"))
+	          {
+		         l_value = Convert.ToInt32(mrow["MarkerNo"]);
+		    	 if(l_value&gt;0 &amp;&amp; l_value&gt;l_valueMax)
+		   	   		l_valueMax=l_value;
+	          }     
+	    }
+	    l_valueMax++;    		
+	 	foreach (mrow in BaseObject.ItemDetailDataTable.Select("WorkOrderItemId is not null ", "MarkerNo"))
+		{
+	    	if (mrow.RowState == DataRowState.Deleted || mrow.RowState == DataRowState.Detached)
+	        	continue;
+				
+			if (mrow.RowState == DataRowState.Added)
+			   {
+			    l_valueMaxString = l_valueMax.ToString();
+		    	mrow.SetField&lt;|string|&gt;("MarkerNo",l_valueMaxString);
+	 		   }	 		
+		}        
+	}      
+}</ScriptText>
+</ScriptDefinition>

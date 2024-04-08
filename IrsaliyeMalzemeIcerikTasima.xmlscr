@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IrsaliyeMalzemeIcerikTasima" Enabled="false" Priority="0" ScriptName="IrsaliyeMalzemeIcerikTasima">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>
+//Generated on 7.03.2024 14:02:23 IrsaliyeMalzemeIcerikTasima
+ 
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null )
+		return null;
+	
+	sb = new StringBuilder();
+	foreach(ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("ItemType=1 and InventoryId is not null"))
+            {
+				inv_id = ri["InventoryId"].ToString();
+				sb.Clear();
+				sb.AppendLine("select isnull(I.AccessCode,\'\') [ac_code] , isnull(FComposition,\'\') [icerik] from IM_Item I with (nolock) where I.RecId=\'"+inv_id.ToString()+"\'");
+                dt_sb = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_sb",sb.ToString());
+                 if(dt_sb != null &amp;&amp; dt_sb.Rows.Count &gt; 0 &amp;&amp; dt_sb.Rows[0]["ac_code"].ToString().Trim() == "FABRIC" )
+                        {
+                             ri.SetField&lt;|string|&gt;("Explanation",dt_sb.Rows[0]["icerik"].ToString());
+                        }      
+			}
+}
+</ScriptText>
+</ScriptDefinition>

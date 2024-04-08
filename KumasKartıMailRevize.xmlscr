@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KumasKartıMail" Enabled="true" Priority="0" ScriptName="KumasKartıMail">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>
+
+
+//Generated on 27.11.2023 15:33:51 KumasKartıMailRevize
+function OnAfterSucceededPost(sender, e)
+ {
+	if (BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null 
+    || BaseObject.CurrentRow.Row["AccessCode"].ToString()!="FABRIC" 
+	|| BaseObject.CurrentRow.Row["ReceiptType"].ToString()!="1" )  
+ return null;
+ 
+if(Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_MailGonder"])==0)
+	{	
+		UserName="";
+		documentNo="";
+		CurrentAccountName="";
+		ReceiptDate="";
+			if(!BaseObject.CurrentRow.Row.IsNull("DocumentNo"))
+			documentNo=BaseObject.CurrentRow.Row["DocumentNo"].ToString();	
+			
+				if(!BaseObject.CurrentRow.Row.IsNull("CurrentAccountId"))
+ 					{ CurrentAccountName = BaseObject.CurrentRow.Row["CurrentAccountId"].ToString();
+						query="SELECT  SUBSTRING(CurrentAccountName, 1, CHARINDEX(\'.\', CurrentAccountName + \'.\') - 1) AS FirstThreeWords FROM  FI_Account where RecId="+CurrentAccountName;
+						dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query.ToString()); 
+						if(dt!=null)
+						CurrentAccountName=dt.Rows[0][0].ToString();
+			 			
+					}
+			if(!BaseObject.CurrentRow.Row.IsNull("ReceiptDate"))
+			ReceiptDate=BaseObject.CurrentRow.Row["ReceiptDate"].ToString();	
+			
+			
+			InsertedAt=BaseObject.CurrentRow.Row["InsertedAt"].ToString(); 
+			
+			UserName=BaseObject.ActiveSession.User.UserName.ToString();	
+			
+		     l_sb = new StringBuilder();	
+		 
+		 	l_sb.AppendLine("&lt;!DOCTYPE html&gt;  &lt;html&gt; &lt;head&gt; &lt;style&gt;");
+			  		l_sb.AppendLine(" table { border: 1px solid; width: auto; /* Otomatik genişlik */ text-align: center; color: #fff;} ");
+			    	l_sb.AppendLine("  table td { border: 3px solid #000000;  color: #000000;}   #tablo-baslik { font-weight: 700;} ");
+					l_sb.AppendLine("    &lt;/style&gt;   &lt;/head&gt; &lt;body&gt;&lt;table&gt;              &lt;tr&gt;         ");
+					l_sb.AppendLine("  &lt;td&gt;&lt;h3&gt;Belge No &lt;/h3&gt;&lt;/td&gt;                  ");
+			 		l_sb.AppendLine("   &lt;td&gt;&lt;h3&gt;Cari Hesap Adı &lt;/h3&gt;&lt;/td&gt;        ");  
+			 		l_sb.AppendLine("   &lt;td&gt;&lt;h3&gt;Order No &lt;/h3&gt;&lt;/td&gt;        ");  
+			 		l_sb.AppendLine("   &lt;td&gt;&lt;h3&gt;Malzeme Kodu &lt;/h3&gt;&lt;/td&gt;       ");  
+			 		l_sb.AppendLine("   &lt;td&gt;&lt;h3&gt;Malzeme Adı &lt;/h3&gt;&lt;/td&gt;       ");  
+			 		l_sb.AppendLine("    &lt;td&gt;&lt;h3&gt;İrsaliye Tarihi &lt;/h3&gt;&lt;/td&gt;    ");  
+			 		l_sb.AppendLine("    &lt;td&gt;&lt;h3&gt;Top Adeti &lt;/h3&gt;&lt;/td&gt;    "); 
+			 		l_sb.AppendLine("    &lt;td&gt;&lt;h3&gt;Miktar  &lt;/h3&gt;&lt;/td&gt;    "); 
+			 		l_sb.AppendLine("    &lt;td&gt;&lt;h3&gt;Variant  &lt;/h3&gt;&lt;/td&gt;  &lt;/tr&gt;  "); 
+			 			
+		 
+        foreach(ia in BaseObject.Data.Tables["IM_ItemAllocation"].Select("WorkOrderItemId is not null and InventoryReceiptItemId is not null") )
+                    {
+                    foreach(ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null"))
+                        {
+                            if (Convert.ToInt32(ia["InventoryReceiptItemId"]) == Convert.ToInt32(ri["RecId"]))
+                                {
+                                    invCode="";
+                                    invName="";
+                                    ManufacturingOrderNo="";
+                                    ItemVariant1Name="";
+                                    PartyNo="";
+                                    PackageQuantity=0m;
+                                    Quantity=0m;
+                                    
+                                        if(!ri.IsNull("InventoryCode"))
+                                    invCode=ri["InventoryCode"].ToString();
+                                                    
+                                        if(!ri.IsNull("InventoryName"))
+                                    invName=ri["InventoryName"].ToString();
+                                      /*              
+                                        if(!ri.IsNull("ManufacturingOrderNo"));
+                                    ManufacturingOrderNo=ri["ManufacturingOrderNo"].ToString(); 
+                                        */
+                                        query2 = "select isnull(WO.WorkOrderNo,\'\') [order_no] from MA_WorkOrder WO with (nolock) left join MA_WorkOrderItem WOI with (nolock) on WOI.WorkOrderId=WO.RecId where WOI.RecId=\'"+ia["WorkOrderItemId"].ToString()+"\'";
+                                        dt2 = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt2",query2.ToString()); 
+                                        if(dt2 == null || dt2.Rows.Count &lt;=0)
+                                             return null;
+                                          order_no_ = dt2.Rows[0]["order_no"].ToString();  
+						                ManufacturingOrderNo = order_no_;
+                                        
+                                        if(!ri.IsNull("ItemVariant1Id"));
+                                    ItemVariant1Name=ri["ItemVariant1Name"].ToString(); 
+                                
+                                        if(!ri.IsNull("PartyNo"));
+                                    PartyNo=ri["PartyNo"].ToString(); 
+                                    
+                                        if(!ri.IsNull("PackageQuantity"));
+                                    PackageQuantity=ri["PackageQuantity"].ToString(); 
+                                        
+                                        if(!ri.IsNull("Quantity"));
+                                    Quantity= Convert.ToDecimal(ri["Quantity"]).ToString(); 
+                                    l_sb.AppendLine("  &lt;tr&gt;   &lt;td&gt;"+documentNo+"&lt;/td&gt;    "); 
+                                    l_sb.AppendLine("    &lt;td&gt;"+CurrentAccountName+"&lt;/td&gt;    "); 
+                                    l_sb.AppendLine("    &lt;td&gt;"+ManufacturingOrderNo+"&lt;/td&gt;    "); 
+                                    l_sb.AppendLine("    &lt;td&gt;"+invCode+"&lt;/td&gt;    "); 
+                                    l_sb.AppendLine("    &lt;td&gt;"+invName+"&lt;/td&gt;    "); 	
+                                    l_sb.AppendLine("    &lt;td&gt;"+ReceiptDate+"&lt;/td&gt;    "); 	
+                                    l_sb.AppendLine("    &lt;td&gt;"+PackageQuantity.ToString()+"&lt;/td&gt;    "); 		
+                                    l_sb.AppendLine("    &lt;td&gt;"+Quantity.ToString()+"&lt;/td&gt;    "); 		
+                                    l_sb.AppendLine("    &lt;td&gt;"+ItemVariant1Name.ToString()+"&lt;/td&gt;   &lt;/tr&gt;   "); 
+                                }
+                        }
+                    }
+                    l_sb.AppendLine("    &lt;/tr&gt;  &lt;/table&gt;   &lt;/body&gt; &lt;/html&gt;   &lt;br/&gt;  "); 
+				mailMessage=l_sb.ToString()+" &lt;br/&gt; "+InsertedAt.ToString()+" Tarih de "+UserName+ " Kullanıcı Tarafından Açılmıştır";
+			// MessageBox.Show(mailMessage.ToString());
+			// return null;
+	    	    taskm=BaseObject.Container.Resolve&lt;|TaskMessageService|&gt;("TaskMessageService");   
+	    	    
+		        //taskm.SendEmail("furkan.usta@enkayyazilim.com; ramazanbayhan@ecosetekstil.com.tr; mervekoc@unitytekstil.com.tr; edayagci@ecosetekstil.com.tr;denetim@ecosetekstil.com.tr;gorkemkanal@ecosetekstil.com.tr;cihansaltik@ecosetekstil.com.tr;aksesuardepo@ecosetekstil.com.tr;gizemyegenoglu@ecosetekstil.com.tr;planlama1@ecosetekstil.com.tr;kumasdepo@ecosetekstil.com.tr ;ebrualkan@ecosetekstil.com.tr;seldaergul@ecosetekstil.com.tr;serifeoguz@ecosetekstil.com.tr;elifondun@ecosetekstil.com.tr;sunakaratas@ecosetekstil.com.tr;sevvalkorkusuz@ecosetekstil.com.tr;nalanerol@ecosetekstil.com.tr;Zeynepzollu@ecosetekstial.com.tr;cetinon@ecosetekstil.com.tr; ","Extreme Mal Alım İrsaliye", mailMessage.ToString()); 
+		        taskm.SendEmail("furkan.usta@enkayyazilim.com;berzan.arslan@enkayyazilim.com;","Extreme Mal Alım İrsaliye", mailMessage.ToString()); 
+		        BaseObject.CurrentRow.Row.SetField&lt;|int|&gt;("UD_MailGonder",1);
+		        dt_updateSQL_ = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_updateSQL_","update IM_Receipt set UD_MailGonder=1 where RecId="+BaseObject.CurrentRow.Row["RecId"].ToString()); 
+ 
+    }
+    
+	}</ScriptText>
+</ScriptDefinition>

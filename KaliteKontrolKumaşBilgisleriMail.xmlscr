@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyeGirilenKumaşMail" Enabled="true" Priority="0" ScriptName="İrsaliyeGirilenKumaşMail">
+  <Events>
+    <Event Enabled="true" ObjectName="WorkOrderQCTestEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="WorkOrderQCTestEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 23.12.2022 17:09:38
+function OnAfterSucceededPost(sender,e)
+{
+	if(BaseObject==null || BaseObject.CurrentRow==null || BaseObject.CurrentRow.Row==null || BaseObject.CurrentRow.Row["IsShipment"].ToString()=="False")
+	return null;  
+
+
+
+ 	query="Select IsNull( PartyNo,\' \'), I.InventoryCode,I.InventoryName from IM_ReceiptItem rei left join IM_Item I on I.RecId=rei.InventoryId where rei.RecId="+BaseObject.CurrentRow.Row["InventoryReceiptItemId"].ToString();
+ 	  dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query);
+ 
+			 sb = new StringBuilder(); 
+		               
+                                sb.AppendLine("&lt;!DOCTYPE html&gt;");
+                                sb.AppendLine("&lt;html&gt;");
+                                sb.AppendLine("&lt;head&gt;");
+                                sb.AppendLine("&lt;meta charset= \"utf-8\"&gt;");
+                                sb.AppendLine("&lt;style&gt;");
+                                sb.AppendLine("body {");
+                                sb.AppendLine("font-family:verdana;");
+                                sb.AppendLine("}");
+                                sb.AppendLine("table {");
+                                sb.AppendLine("width:100%;");
+                                sb.AppendLine("}");
+                                sb.AppendLine("table, th, td {");
+                                sb.AppendLine("border: 3px solid #eee;");
+                                sb.AppendLine("border-collapse: collapse;");
+                                sb.AppendLine("}");
+                                sb.AppendLine("td {");
+                                sb.AppendLine("padding: 5px;}");
+                                sb.AppendLine("table th {");
+                                sb.AppendLine("color: black;");
+                                sb.AppendLine("}");
+                                sb.AppendLine("&lt;/style&gt;");
+                                sb.AppendLine("&lt;/head&gt;");
+                                sb.AppendLine("&lt;body&gt;");
+                                sb.AppendLine("&lt;table&gt;");
+                                sb.AppendLine("&lt;TR&gt;");
+                                sb.AppendLine("&lt;TH ALIGN=LEFT&gt;Parti No&lt;/TH&gt; &lt;TH ALIGN=LEFT&gt; Kumaş Kodu&lt;/TH&gt;&lt;TH ALIGN=LEFT&gt; Kumaş Adı&lt;/TH&gt;");
+                                sb.AppendLine("&lt;/TR&gt;");
+                                sb.AppendLine("&lt;tr&gt;");
+                                sb.AppendLine("&lt;td&gt;"+dt.Rows[0][0].ToString()+"&lt;/td&gt; &lt;td&gt;"+dt.Rows[0][1].ToString()+"&lt;/td&gt;&lt;td&gt;"+dt.Rows[0][2].ToString()+"&lt;/td&gt;");
+                                sb.AppendLine("&lt;/tr&gt;");
+   								sb.AppendLine("&lt;/TABLE&gt;");
+								sb.AppendLine("&lt;/body&gt;");
+								sb.AppendLine("&lt;/html&gt;");
+                             	
+                             
+					taskm=BaseObject.Container.Resolve&lt;|TaskMessageService|&gt;("TaskMessageService");
+								
+                    taskm.SendEmail("furkan.polat@slnmoda.com.tr","Boyahane Renk Kartı Açılmıştır." +"",sb.ToString()+"Bilgi İşlem =&gt; tarafından otomatik olarak gönderilmiştir");
+					 
+	 }
+			  
+ 		
+ 		  
+ 							
+ </ScriptText>
+</ScriptDefinition>

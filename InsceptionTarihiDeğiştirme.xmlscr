@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="InsceptionTarihiDeğiştirme" Enabled="true" Priority="0" ScriptName="InsceptionTarihiDeğiştirme">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="TWorkOrderEN" />
+  </Events>
+  <Histories>
+    <History EditedBy="FurkanUsta" EntryDate="2023-04-07T00:00:00">
+      <Change>Insception tarihi sadece 90 ve 1 recid olan kullanıcılar tarafından değiştirilebilir.</Change>
+    </History>
+  </Histories>
+  <ScriptText>//Generated on 7.04.2023 09:58:55
+/*
+Insception tarihi sadece 90 ve 1 recid olan kullanıcılar tarafından değiştirilebilir.
+
+*/
+function OnBeforePost(sender,eventArg)
+{
+	 if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("UD_inspection"))
+		return null;
+		
+		if(BaseObject.ActiveSession.User.RecId == "1" || BaseObject.ActiveSession.User.RecId == "90")
+   				return null;
+    	
+		/*
+	InsceptionTarihiDeğiştirme
+		*/
+		
+		old_date="01.01.1900";
+		
+		if (BaseObject.CurrentRow.Row["UD_inspection", DataRowVersion.Original] != DBNull.Value)
+			old_date = Convert.ToDateTime(BaseObject.CurrentRow.Row["UD_inspection", DataRowVersion.Original]);
+
+		new_date="01.01.1900";
+
+		if (BaseObject.CurrentRow.Row["UD_inspection"] != DBNull.Value)
+			new_date = Convert.ToDateTime(BaseObject.CurrentRow.Row["UD_inspection"].ToString());
+	
+		if(old_date != new_date)
+		{
+		sender.ShowMessage("Insception Tarihi Sadece Yöneticiler Tarafından Değiştirilebilir.. {scr..InsceptionTarihiDeğiştirme}");
+		eventArg.Cancel=true;
+		return null;
+		}
+}</ScriptText>
+</ScriptDefinition>

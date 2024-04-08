@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FaturaSatırÜrünAdıAçıklama" Enabled="true" Priority="0" ScriptName="FaturaSatırÜrünAçıklama">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>function OnBeforePost(sender ,eventArg){
+	if(BaseObject!=null &amp;&amp; BaseObject.CurrentRow!=null &amp;&amp; BaseObject.CurrentRow.Row!=null &amp;&amp; BaseObject.CurrentRow.Row.RowState!=DataRowState.Deleted &amp;&amp; BaseObject.CurrentRow.Row.RowState!=DataRowState.Detached){
+		foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null"))
+		{
+			if(dr.RowState!=DataRowState.Deleted &amp;&amp; dr.RowState!=DataRowState.Detached){
+				MusteriSiparisNo="";
+				MalzemeAdi=dr["InventoryName"].ToString();
+				VaryantAdi="";
+				PartiNo="";
+				UrunAciklama="";
+				if(System.String.IsNullOrWhiteSpace(dr["CustomerOrderNo"].ToString()) || System.String.IsNullOrEmpty(dr["CustomerOrderNo"].ToString())){
+					MusteriSiparisNo="";
+				}
+				else{
+					MusteriSiparisNo=dr["CustomerOrderNo"].ToString();
+				}
+				
+				if(System.String.IsNullOrWhiteSpace(dr["ItemVariant1Name"].ToString()) || System.String.IsNullOrEmpty(dr["ItemVariant1Name"].ToString())){
+					VaryantAdi="";
+				}
+				else{
+					VaryantAdi=dr["ItemVariant1Name"].ToString();
+				}
+					
+				if(System.String.IsNullOrWhiteSpace(dr["PartyNo"].ToString()) || System.String.IsNullOrEmpty(dr["PartyNo"].ToString())){
+					PartiNo="";
+				}
+				else{
+					PartiNo=dr["PartyNo"].ToString();
+				}
+				UrunAciklama=MusteriSiparisNo+" "+VaryantAdi+" "+PartiNo;
+				dr.SetField&lt;|String|&gt;("Explanation",UrunAciklama.ToString());
+				
+				if(Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])==120){
+					if(Convert.ToInt32(BaseObject.CurrentRow.Row["OutWarehouseId"])==9) 
+						dr.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation","İplik Satışı");
+					if(Convert.ToInt32(BaseObject.CurrentRow.Row["OutWarehouseId"])==10)
+						dr.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation","Ham Kumaş Satışı");
+					if(Convert.ToInt32(BaseObject.CurrentRow.Row["OutWarehouseId"])==11)
+						dr.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation","Boyalı Kumaş Satışı");		
+				}
+				if(Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])==125){
+					if(Convert.ToInt32(BaseObject.CurrentRow.Row["OutWarehouseId"])==9)
+						dr.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation","Fason İplik Satışı");
+					if(Convert.ToInt32(BaseObject.CurrentRow.Row["OutWarehouseId"])==10)
+						dr.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation","Fason Örgü Satışı");
+					if(Convert.ToInt32(BaseObject.CurrentRow.Row["OutWarehouseId"])==11)
+						dr.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation","Fason Boya Satışı");
+						
+				}
+			}
+		}
+    }
+}	</ScriptText>
+</ScriptDefinition>

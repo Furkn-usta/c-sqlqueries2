@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FaturaÖdemePlanıOtomatikAtama" Enabled="false" Priority="0" ScriptName="FaturaÖdemePlanıOtomatikAtama">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="ColumnChanged" FunctionName="OnColumnChanged" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 18.06.2020 17:29:30 FaturaÖdemePlanıOtomatikAtama
+/*
+  Bütün faturalarda Ödeme planı tetiklendiğinde ödeme planında tanımlı olan UD_VadeGün alanının faturdaki Vade alanınına taşınması sağlanıyor.
+  Düzenleme :  19.02.2021
+
+*/
+function OnColumnChanged(sender ,eventArg){
+    if(BaseObject != null 
+       &amp;&amp; BaseObject.CurrentRow != null 
+       &amp;&amp; BaseObject.CurrentRow.Row != null 
+       &amp;&amp; BaseObject.CurrentRow.Row.RowState!=DataRowState.Deleted
+       &amp;&amp; BaseObject.CurrentRow.Row.RowState!=DataRowState.Detached
+       &amp;&amp; !BaseObject.IsCopyEntity
+       &amp;&amp; eventArg.Row.Table.TableName == "IM_Invoice"
+       &amp;&amp; eventArg.Column.ColumnName == "PaymentPlanId"
+       &amp;&amp; !eventArg.Row.IsNull("PaymentPlanId")){   	
+        str="select isnull(UD_VadeGun,0) Vade from FI_PaymentPlan with (nolock) where RecId="+Convert.ToInt32(eventArg.Row["PaymentPlanId"]);	    
+	    dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",str);	
+		if(dt!=null 
+		   &amp;&amp; dt.Rows.Count&gt;0 
+		   &amp;&amp; !dt.Rows[0].IsNull("Vade") 
+		   &amp;&amp; Convert.ToInt32(dt.Rows[0]["Vade"])&gt;0)
+		    BaseObject.CurrentRow.Row.SetField&lt;|int|&gt;("TermDay",Convert.ToInt32(dt.Rows[0]["Vade"]));
+    }
+}	</ScriptText>
+</ScriptDefinition>

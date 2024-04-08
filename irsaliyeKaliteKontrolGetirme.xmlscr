@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyeKaliteKoduGetirme" Enabled="true" Priority="0" ScriptName="İrsaliyeKaliteKoduGetirme">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 17.03.2023 12:01:51
+function OnBeforePost(sender, ev)
+{
+
+	if(BaseObject == null || BaseObject.CurrentRow == null ||BaseObject.CurrentRow.Row == null)
+		return null;
+		foreach( ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("InventoryId is not null"))
+	{
+		q = "select isnull (UD_Talimat,\' \') from IM_Item where RecId="+ri["InventoryId"].ToString();
+		r = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "r",q); 
+	
+		if(r!= null &amp;&amp; r.Rows.Count &gt; 0)
+		{
+		ri.SetField&lt;|String|&gt;("UD_KaliteKontrol", r.Rows[0][0].ToString());
+		}
+		
+	}
+
+}</ScriptText>
+</ScriptDefinition>

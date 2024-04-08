@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IsimeGoreEngelleme" Enabled="true" Priority="0" ScriptName="IsimeGoreEngelleme">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 15.11.2022 15:13:37
+	function OnBeforePost(sender, e)
+{
+	if(BaseObject == null || BaseObject.CurrentRow == null || BaseObject.CurrentRow.Row == null  )
+		return null;
+
+	
+		foreach(ri in BaseObject.Data.Tables["MA_RecipeItem"].Select("RecId is not null") )
+		{
+			query  = " select I.RecId from IM_Item I with (nolock) ";
+			query += " where I.InventoryCode like \'%GNL%\' AND I.RecId="+ri["InventoryId"].ToString();
+		    r = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction,"r",query); 	      
+	  
+  			if(r!=null &amp;&amp; r.Rows.Count&gt;0)
+  			{				
+				sender.ShowMessage("Aksesuar Kodlarında GNL mevcut kontrol ediniz...! {scr..IsmeGoreEngelleme}");	
+				e.Cancel=true;
+				return null;			
+			}
+		}
+}</ScriptText>
+</ScriptDefinition>

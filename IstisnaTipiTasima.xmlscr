@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IstisnaTipiTasima" Enabled="true" Priority="0" ScriptName="IstisnaTipiTasima">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 22.02.2023 12:03:41
+function OnBeforePost(sender,ev)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null)
+	return null;
+	
+	foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select("ExceptionTypeId is not null"))
+	{	
+	
+	query="select ET.Code+\' \' +ET.Name [it] from MD_ExceptionType ET where ET.RecId=\'"+dr["ExceptionTypeId"].ToString()+"\' group by ET.Code,ET.Name  ";
+	dt=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query); 
+	if(dt==null || dt==null)
+		return null;
+		
+	dr.SetField&lt;|string|&gt;("UD_EInvoiceItemExplanation",dt.Rows[0]["it"]);
+	return null;
+		
+	}
+}
+
+
+</ScriptText>
+</ScriptDefinition>

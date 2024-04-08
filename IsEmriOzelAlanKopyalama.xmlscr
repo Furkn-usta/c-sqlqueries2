@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IsEmriOzelAlanKopyalama" Enabled="true" Priority="0" ScriptName="IsEmriOzelAlanKopyalama">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="TWorkOrderEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 2.08.2022 16:03:14
+
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject.CurrentRow.Row.IsNull("UD_IsEmriKopya") || BaseObject.CurrentRow.Row["UD_IsEmriKopya"].ToString().Trim()=="")
+	         return null;
+	
+	mColumns = array(string, "UD_OL1","UD_OL2","UD_OL3","UD_OL4","UD_OL5","UD_OL6","UD_OL7","UD_OL8","UD_OL9","UD_OL10","UD_BDN1","UD_BDN2","UD_BDN3","UD_BDN4","UD_BDN5","UD_BDN6","UD_BDN7","UD_BDN8","UD_BDN9","UD_BDN10","UD_BDN11","UD_BDN12","UD_D1","UD_D2","UD_D3","UD_D4","UD_D5","UD_D6","UD_D7","UD_D8","UD_D9","UD_D10","UD_D11","UD_D12","UD_D13","UD_D14","UD_D15","UD_D16","UD_D17","UD_D18","UD_D19","UD_D20","UD_D21","UD_D22","UD_D23","UD_D24","UD_D25","UD_D26","UD_D27","UD_D28","UD_D29","UD_D30","UD_D31","UD_D32","UD_D33","UD_D34","UD_D35","UD_D36","UD_D37","UD_D38","UD_D39","UD_D40","UD_D41","UD_D42","UD_D43","UD_D44","UD_D45","UD_D46","UD_D47","UD_D48","UD_D49","UD_D50","UD_D51","UD_D52","UD_D53","UD_D54","UD_D55","UD_D56","UD_D57","UD_D58","UD_D59","UD_D60","UD_D61","UD_D62","UD_D63","UD_D64","UD_D65","UD_D66","UD_D67","UD_D68","UD_D69","UD_D70","UD_D71","UD_D72","UD_D73","UD_D74","UD_D75","UD_D76","UD_D77","UD_D78","UD_D79","UD_D80","UD_D81","UD_D82","UD_D83","UD_D84","UD_D85","UD_D86","UD_D87","UD_D88","UD_D89","UD_D90","UD_D91","UD_D92","UD_D93","UD_D94","UD_D95","UD_D96","UD_D97","UD_D98","UD_D99","UD_D100","UD_D101","UD_D102","UD_D103","UD_D104","UD_D105","UD_D106","UD_D107","UD_D108","UD_D109","UD_D110","UD_D111","UD_D112","UD_D113","UD_D114","UD_D115","UD_D116","UD_D117","UD_D118","UD_D119","UD_D120","UD_Nots");
+	
+	q = "select * from MA_WorkOrder where WorkOrderNo = \'" + BaseObject.CurrentRow.Row["UD_IsEmriKopya"].ToString() + "\'";
+	r = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "r", q);
+	
+	if(r == null || r.Rows.Count &lt;= 0)
+	    return null;
+	
+	foreach(mColumn in mColumns)
+	  if(!r.Rows[0].IsNull(mColumn))  
+	      BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;(mColumn, r.Rows[0][mColumn]);
+}</ScriptText>
+</ScriptDefinition>

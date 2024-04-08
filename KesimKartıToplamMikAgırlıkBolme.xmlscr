@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KesimKartıToplamMikAgırlıkBolme	" Enabled="true" Priority="0" ScriptName="KesimKartıToplamMikAgırlıkBolme	">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderCuttingProductionEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="TWorkOrderCuttingProductionEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 14.02.2023 14:46:20
+
+function OnBeforePost(sender, ev)
+{
+if(BaseObject == null 
+|| BaseObject.CurrentRow == null 
+|| BaseObject.CurrentRow.Row == null
+|| BaseObject.CurrentRow.Row.IsNull("Quantity")
+|| BaseObject.CurrentRow.Row.IsNull("Weight")
+|| Convert.ToDecimal(BaseObject.CurrentRow.Row["Quantity"])==0
+|| Convert.ToDecimal(BaseObject.CurrentRow.Row["Weight"])==0)
+  return null; 
+
+      tot_mik = Convert.ToDecimal(BaseObject.CurrentRow.Row["Quantity"]);
+      agirlik = Convert.ToDecimal(BaseObject.CurrentRow.Row["Weight"]);
+      g_gramaj=agirlik/tot_mik;
+      BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("UD_GGramaj",Convert.ToDecimal(g_gramaj));
+  }</ScriptText>
+</ScriptDefinition>

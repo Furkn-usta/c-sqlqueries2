@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IrsaliyeBilgiTasima" Enabled="true" Priority="0" ScriptName="IrsaliyeBilgiTasima">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null || BaseObject.CurrentRow == null ||BaseObject.CurrentRow.Row == null)
+		return null;
+
+	foreach( ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("PackagingListItemId is not null") )
+	{
+		if(ri.RowState == DataRowState.Deleted || ri.RowState == DataRowState.Detached)
+			continue;
+		
+		q = "SELECT isnull(WO.WorkOrderNo, \'_\') [WO], case when isnull(EndPackaging,0)-isnull(StartPackaging,0) = 0 then 0 else isnull(EndPackaging,0)-isnull(StartPackaging,0)+1 end [PQ], isnull(I.UD_PON, \'_\') [PO], isnull(I.UD_REF, \'_\') [REF], isnull(I.UD_SecondaryName, \'_\') [EX] FROM IM_PackagingListItem PLI with (nolock) LEFT JOIN MA_WorkOrder WO with (nolock) on WO.RecId = PLI.WorkOrderId LEFT JOIN IM_Item I with(nolock) on I.RecId = WO.InventoryId WHERE PLI.RecId = " + ri["PackagingListItemId"].ToString();
+		r = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "r",q); 
+		
+		if(r == null || r.Rows.Count &lt;= 0)
+			continue;
+		
+		desc = System.String.Format("^WO={0}^PQ={1}^PO={2}^REF={3}^EX={4}^", array(object,r.Rows[0]["WO"], r.Rows[0]["PQ"], r.Rows[0]["PO"], r.Rows[0]["REF"],r.Rows[0]["EX"]));
+
+		ri.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation", desc);
+	}
+}</ScriptText>
+</ScriptDefinition>

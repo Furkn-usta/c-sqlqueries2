@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="GönerilenHavale" Enabled="true" Priority="0" ScriptName="GonderilenHavale">
+  <Events>
+    <Event Enabled="true" ObjectName="GLReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="GLReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 08.05.2020 10:57:07
+function OnBeforePost(sender,eventArg){
+	if(BaseObject!=null &amp;&amp; BaseObject.CurrentRow!=null &amp;&amp; BaseObject.CurrentRow.Row!=null &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("ReceiptType") &amp;&amp; Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"])==1 &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("SourceModule") &amp;&amp; Convert.ToInt16(BaseObject.CurrentRow.Row["SourceModule"])==15 &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("SourceId") &amp;&amp; Convert.ToInt64(BaseObject.CurrentRow.Row["SourceId"])&gt;0 &amp;&amp; BaseObject.IsNewRecord   &amp;&amp; BaseObject.CurrentRow.Row.RowState!=DataRowState.Deleted){
+		sqlStr="select RecId from FI_BankReceipt with (nolock) where isnull(ReceiptType,0)=4  and RecId="+Convert.ToInt64(BaseObject.CurrentRow.Row["SourceId"]);
+		dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "BB",sqlStr);	
+		if(dt!=null &amp;&amp; dt.Rows.Count&gt;0){
+		     BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("Explanation","4-Gönderilen Havaleler");
+		}           
+	}
+}</ScriptText>
+</ScriptDefinition>

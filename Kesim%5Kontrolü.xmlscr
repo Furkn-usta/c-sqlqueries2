@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="Kesim%5Kontrolü" Enabled="true" Priority="0" ScriptName="Kesim%5Kontrolü">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderCuttingProductionEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="TWorkOrderCuttingProductionEN" />
+  </Events>
+  <Histories />
+  <ScriptText>// 25.08.2020 
+function OnAfterSucceededPost(sender , eventArg){ 
+    if(BaseObject != null &amp;&amp; BaseObject.CurrentRow != null &amp;&amp; BaseObject.CurrentRow.Row != null){   
+	      str="select isnull(sum(isnull(Quantity,0)),0) Qty from MA_WorkOrderItem with (nolock) where WorkOrderSubType=2 and ParentItemId is null and SubNo="+BaseObject.CurrentRow.Row["SubNo"]+" and WorkOrderId in (select WorkOrderId from MA_WorkOrderItem with (nolock) where RecId = "+BaseObject.CurrentRow.Row["WorkOrderItemId"]+")";
+	      dt =UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt", str);
+	  	  totalOrderQty=0m;totalCuttingQty=0m;totalPercent=0m;
+	  	  if(dt!=null &amp;&amp; dt.Rows.Count&gt;0 &amp;&amp; Convert.ToDecimal(dt.Rows[0]["Qty"])&gt;0m){
+		  	   str="select isnull(sum(isnull(Quantity,0)),0) Qty from MA_WorkOrderProduction  with (nolock) where InOut=1 and ProductionType=100 and ProcessId="+BaseObject.CurrentRow.Row["ProcessId"]+" and  SubNo="+BaseObject.CurrentRow.Row["SubNo"]+" and WorkOrderItemId="+BaseObject.CurrentRow.Row["WorkOrderItemId"];
+		       dtCut =UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt", str);
+		  	   totalOrderQty=0m;totalCuttingQty=0m;totalPercent=0m;
+		  	   if(dtCut!=null &amp;&amp; dtCut.Rows.Count&gt;0 &amp;&amp; Convert.ToDecimal(dtCut.Rows[0]["Qty"])&gt;0m){
+	  	        totalOrderQty=Convert.ToDecimal(dt.Rows[0]["Qty"]); totalCuttingQty=Convert.ToDecimal(dtCut.Rows[0]["Qty"]);
+	  	        if(totalOrderQty&gt;0m){
+	  	            totalPercent=(totalCuttingQty-totalOrderQty)/totalOrderQty*100;
+	  	            if(totalPercent&gt;5){
+	  	                 str="select isnull(WorkOrderNo,\'\') OrderNo,isnull(WOI.OperationCode,\'\') Renk from MA_WorkOrder W with (nolock) left join  MA_WorkOrderItem WI with (nolock) on WI.WorkOrderId=W.RecId and WI.WorkOrderSubType=1 left join MA_WorkOrderItem WOI with (nolock) on WOI.WorkOrderId=W.RecId and WOI.WorkOrderSubType=2 and WOI.ParentItemId is null where WOI.SubNo="+BaseObject.CurrentRow.Row["SubNo"]+" and  WI.RecId="+BaseObject.CurrentRow.Row["WorkOrderItemId"];
+						 dtOrder =UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dtOrder", str);
+                         orderNo="";renk="";
+                         if(dtOrder!=null &amp;&amp; dtOrder.Rows.Count&gt;0 ){
+                            orderNo= dtOrder.Rows[0]["OrderNo"];
+                            renk= dtOrder.Rows[0]["Renk"];
+                         }
+					  	        
+	  	                 taskm=BaseObject.Container.Resolve&lt;|TaskMessageService|&gt;("TaskMessageService");
+	                     taskm.SendEmail("uretim.planlama1@flomak.com","Renk: "+renk+" Order No :"+orderNo+" nolu orderin  kesilecek adeti sipariş adetinden 5% fazladir.");
+	   				     taskm2.SendEmail("aksesuar.satinalma@flomak.com","Renk: "+renk+" Order No :"+orderNo+" nolu orderin kesilecek adeti sipariş adetinden 5% fazladir.");
+	                     taskm3.SendEmail("aksesuar.depo@flomak.com","Renk: "+renk+" Order No :"+orderNo+" nolu orderin kesilecek adeti sipariş adetinden 5% fazladir.");
+	                     taskm4.SendEmail("uretim.planlama2@flomak.com","Renk: "+renk+" Order No :"+orderNo+" nolu orderin kesilecek adeti sipariş adetinden 5% fazladir.");
+	                     taskm5.SendEmail("selcan.kaya@enkayyazilim.com","Renk: "+renk+" Order No :"+orderNo+" nolu orderin kesilecek adeti sipariş adetinden 5% fazladir.");
+	                    
+	  	            }
+	  	        
+	  	        }
+	  	    }
+	  	}          
+	}
+}</ScriptText>
+</ScriptDefinition>

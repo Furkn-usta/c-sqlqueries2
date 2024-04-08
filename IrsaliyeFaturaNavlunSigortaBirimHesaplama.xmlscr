@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IrsaliyeFaturaNavlunSigortaBirimHesaplama" Enabled="true" Priority="0" ScriptName="IrsaliyeFaturaNavlunSigortaBirimHesaplama">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="false" ObjectName="InvoiceEN" />
+    <Event Enabled="false" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 6.04.2024 12:50:53 IrsaliyeFaturaNavlunSigortaBirimHesaplama
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("ReceiptType")
+    )
+    return null;
+        navlun_ = 0m;
+        sigorta_ = 0m;
+        t_agirlik = 0m;
+        
+            if(BaseObject.CurrentRow.Row.IsNull("UD_Navlun"))
+		navlun_ = 1m;
+            else
+        navlun_ = Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_Navlun"]);
+	
+            if(BaseObject.CurrentRow.Row.IsNull("UD_Sigorta"))
+		sigorta_ = 1m;
+            else
+        sigorta_ = Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_Sigorta"]);
+	
+            if(BaseObject.CurrentRow.Row.IsNull("UD_TAgirlik"))
+		t_agirlik = 1m;
+            else
+        t_agirlik = Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_TAgirlik"]);
+	
+                foreach(ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("InventoryId is not null and Quantity2 &gt; 0 "))
+                {	
+                   formul_1 =  (Convert.ToDecimal(ri["Quantity2"]) * Convert.ToDecimal(navlun_)) / Convert.ToDecimal(sigorta_) ;
+                   ri.SetField&lt;|decimal|&gt;("UD_NavlunBedeli",formul_1);
+                   
+                   if(!ri.IsNull("ForexUnitPrice"))
+                   {
+                     if(!ri.IsNull("UD_CIF"))
+                   {
+                    cif_ = 1m;
+                   }
+                   else
+                   {
+                    cif_ = Convert.ToDecimal(ri["UD_CIF"]);
+                   }
+                    formul_2 = ((Convert.ToDecimal(ri["ForexUnitPrice"])*Convert.ToDecimal(ri["Quantity"])) + Convert.ToDecimal(formul_1)) * Convert.ToDecimal(sigorta_) / Convert.ToDecimal(cif_);
+                    ri.SetField&lt;|decimal|&gt;("UD_SigortaBedeli",formul_2);
+                   
+                   } 
+                }
+}</ScriptText>
+</ScriptDefinition>

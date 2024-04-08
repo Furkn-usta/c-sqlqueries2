@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KesimKartıUretimeCikisKontrolMail" Enabled="true" Priority="0" ScriptName="KesimKartıUretimeCikisKontrolMail">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderCuttingProductionEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="TWorkOrderCuttingProductionEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 12.12.2023 16:49:41 KesimKartıUretimeCikisKontrolMail 
+const_mail_adress="furkan.usta@enkayyazilim.com;muzaffer.yilmaz@enkayyazilim.com";
+mail_konu ="Kesim Kartı Girişi";
+
+function OnBeforePost(sender, ev)
+{
+/*	*/
+    if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("ProductionType")
+    || BaseObject.CurrentRow.Row.IsNull("WorkOrderItemId")
+    || BaseObject.CurrentRow.Row.IsNull("Quantity")
+    || Convert.ToInt32(BaseObject.CurrentRow.Row["ProductionType"]) != 100)
+       	return null;
+
+   	cutting_id = 1;
+	
+    qry = new StringBuilder();
+    
+    foreach(wopd in BaseObject.Data.Tables["MA_WorkOrderProductionDetail"].Select("WorkOrderProductionId is not null") )
+	{
+        if(wopd.IsNull("SentForCutting"))
+        {
+            sentforcutting = 0;
+        }
+        if(!wopd.IsNull("SentForCutting"))
+        {
+            sentforcutting = Convert.ToDecimal(wopd["SentForCutting"]);
+        }
+
+        if(wopd.IsNull("IncreaseQty"))
+        {
+            increaseQty = 0;
+        }
+        if(!wopd.IsNull("IncreaseQty"))
+        {
+            increaseQty = Convert.ToDecimal(wopd["IncreaseQty"]);
+        }        
+        
+        if(wopd.IsNull("ReturnQty"))
+        {
+            returnQty = 0;
+        }
+        if(!wopd.IsNull("ReturnQty"))
+        {
+            returnQty = Convert.ToDecimal(wopd["ReturnQty"]);
+        }
+
+        qry.Clear();
+        qry.AppendLine(" select  isnull(X.rq,\'\') [rq] ,isnull(X.oc,\'\') [oc] ,isnull(X.rec_id,0) [rec_id] ,isnull(X.[SubType1],0)[SubType1], X.[OrderNo] ,sum([Gerçek Gramajı]) [GercekGramaj]  from ( ");
+        qry.AppendLine(" select (select WIC.RequirementGroup from MA_WorkOrderItem WIC with (nolock)  ");
+        qry.AppendLine(" where WIC.WorkOrderId = (select WI.WorkOrderId from MA_WorkOrderItem WI with (nolock) where WI.RecId = WOP.WorkOrderItemId)  ");
+        qry.AppendLine(" and WIC.WorkOrderSubType = 2 and WIC.SubNo=WOP.SubNo and WIC.ParentItemId is null) [rq]   ");
+        
+        qry.AppendLine(",(select WIC.OperationCode from MA_WorkOrderItem WIC with (nolock)  ");
+        qry.AppendLine(" where WIC.WorkOrderId = (select WI.WorkOrderId from MA_WorkOrderItem WI with (nolock) where WI.RecId = WOP.WorkOrderItemId)  ");
+        qry.AppendLine(" and WIC.WorkOrderSubType = 2 and WIC.SubNo=WOP.SubNo and WIC.ParentItemId is null) [oc] ");
+        
+        qry.AppendLine(",(select WIC.RecId from MA_WorkOrderItem WIC with (nolock)  ");
+        qry.AppendLine(" where WIC.WorkOrderId = (select WI.WorkOrderId from MA_WorkOrderItem WI with (nolock) where WI.RecId = WOP.WorkOrderItemId)    ");
+        qry.AppendLine(" and WIC.WorkOrderSubType = 2 and WIC.SubNo=WOP.SubNo and WIC.ParentItemId is null) [rec_id] ");
+        qry.AppendLine(" ,WOI.RecId [SubType1] ,isnull(WO.WorkOrderNo,\'\') [OrderNo] ");
+        qry.AppendLine(" ,cast(isnull((case when "+Convert.ToDecimal(BaseObject.CurrentRow.Row["Quantity"]).ToString().Replace(",",".")+" &lt;&gt; 0 then (("+Convert.ToDecimal(sentforcutting).ToString().Replace(",",".")+" - ("+Convert.ToDecimal(increaseQty).ToString().Replace(",",".")+" + "+Convert.ToDecimal(returnQty).ToString().Replace(",",".")+")) / "+Convert.ToDecimal(BaseObject.CurrentRow.Row["Quantity"]).ToString().Replace(",",".")+") * 1000 else 0.0 end) / (case when isnull(I.TexArtType,0) = 3 then 10.0 else 1.0 end), 0) as decimal(15,3)) [Gerçek Gramajı]");
+        qry.AppendLine(" from MA_WorkOrderProduction WOP with (nolock)  "); 
+        qry.AppendLine(" left join MA_WorkOrderItem WOI with (nolock)   on WOI.RecId=WOP.WorkOrderItemId ");
+        qry.AppendLine("  left join MA_WorkOrder WO with (nolock)  on WO.RecId=WOI.WorkOrderId");
+        qry.AppendLine("  left join IM_Item I with (nolock)   on I.RecId=WO.InventoryId");
+        qry.AppendLine(" where WOP.WorkOrderItemId=\'"+BaseObject.CurrentRow.Row["WorkOrderItemId"].ToString()+"\' "); 
+        qry.AppendLine(" and WOP.SubNo=\'"+BaseObject.CurrentRow.Row["SubNo"].ToString()+"\'  "); 
+        qry.AppendLine(" and WOP.ProductionType=100 and WOP.ProcessId=\'"+cutting_id.ToString()+"\' )X "); 
+        qry.AppendLine(" group by X.rq,X.oc,X.rec_id ,X.[SubType1] ,X.[OrderNo]  "); 
+       // MessageBox.Show(qry.ToString());
+        qry_dt = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "qry_dt", qry.ToString());
+        
+       // MessageBox.Show(qry.ToString());
+        
+        if(qry_dt == null || qry_dt.Rows.Count &lt;= 0)
+                return null; 
+
+        requirementGroup = qry_dt.Rows[0]["rq"].ToString();
+        operationCode = qry_dt.Rows[0]["oc"].ToString();
+        recId = qry_dt.Rows[0]["rec_id"].ToString();
+        subType1 = qry_dt.Rows[0]["SubType1"].ToString();
+        gercekGramaj = qry_dt.Rows[0]["GercekGramaj"].ToString();
+        order_ = qry_dt.Rows[0]["OrderNo"].ToString();
+        
+        
+        qry2 = new StringBuilder();
+        qry2.Clear();
+        qry2.AppendLine(" select  isnull(X.[var_code],\'\')[var_code],isnull(X.[var_name],\'\')[var_name] ");		        
+        qry2.AppendLine(" ,isnull(X.WorkOrderItemId,0)WorkOrderItemId,isnull(X.[Tedarik Grubu],\'\')[Tedarik Grubu] ");		        
+        qry2.AppendLine(" ,isnull(X.Mik,0)Mik from (");		        
+        qry2.AppendLine(" select (select VI.ItemCode from IM_ItemVariant IV with (nolock) ");		        
+        qry2.AppendLine(" left join IM_VariantItem VI with (nolock) on VI.RecId=IV.Variant1Id ");		        
+        qry2.AppendLine(" where IV.RecId=IA.InventoryVariantId) [var_code] ");		        
+        qry2.AppendLine(" ,(select VI.ItemName from IM_ItemVariant IV with (nolock)");		        
+        qry2.AppendLine(" left join IM_VariantItem VI with (nolock) on VI.RecId=IV.Variant1Id");		        
+        qry2.AppendLine(" where IV.RecId=IA.InventoryVariantId) [var_name]");		        
+        qry2.AppendLine(" ,isnull(IA.WorkOrderItemId,0) WorkOrderItemId");		        
+        qry2.AppendLine(",isnull(IA.RequirementGroup,\'\') [Tedarik Grubu] ");		        
+        qry2.AppendLine(" ,cast(sum(isnull(IA.Quantity,0)) as decimal(15,2)) [Mik]");		        
+        qry2.AppendLine(" from IM_ItemAllocation IA with (nolock)");		        
+        qry2.AppendLine(" left join IM_ReceiptItem IRI with (nolock) on IRI.RecId=IA.InventoryReceiptItemId");
+        qry2.AppendLine(" left join IM_Receipt R with (nolock) on R.RecId=IRI.InventoryReceiptId");
+        qry2.AppendLine(" left join MA_WorkOrderItem WOI with (nolock) on WOI.RecId=IA.WorkOrderItemId");
+        qry2.AppendLine(" where IA.InventoryReceiptType=140 " );
+        qry2.AppendLine(" group by IA.InventoryVariantId,IA.WorkOrderItemId,IA.RequirementGroup )X ");
+        qry2.AppendLine(" where X.WorkOrderItemId=\'"+subType1.ToString()+"\' and (X.var_code=\'"+operationCode.ToString()+"\' or X.var_name=\'"+operationCode.ToString()+"\') and X.[Tedarik Grubu]=\'"+requirementGroup.ToString()+"\'");
+        qry2.AppendLine(" group by X.[var_code] ");
+        qry2.AppendLine(" ,X.WorkOrderItemId");	
+        qry2.AppendLine(" ,X.[var_name]");	
+        qry2.AppendLine(" ,X.[Tedarik Grubu]");	
+        qry2.AppendLine(" ,X.Mik");		        
+        //MessageBox.Show(qry2.ToString());
+        qry2_dt = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "qry2_dt", qry2.ToString());
+        
+        if(qry2_dt == null || qry2_dt.Rows.Count &lt;= 0)
+                    return null; 
+                    
+        uretime_cikis_miktar = qry2_dt.Rows[0]["Mik"].ToString();
+        
+        /**/
+       // MessageBox.Show("Üretime Çıkan = "+uretime_cikis_miktar.ToString());
+       // MessageBox.Show("Miktar = "+BaseObject.CurrentRow.Row["Quantity"].ToString());
+       //MessageBox.Show("Gerçek Gramaj = "+gercekGramaj.ToString());
+        
+        /*
+        top_ = BaseObject.Data.Tables["MA_WorkOrderProduction"].Compute("sum(Quantity)","ProductionType=100 and ProcessId="+cutting_id.ToString()+"");
+        
+        MessageBox.Show(top_.ToString());
+
+        top_ = BaseObject.Data.Tables["MA_WorkOrderProductionVariant"].Compute("sum(Quantity)","Quantity is not null");
+        MessageBox.Show(top_.ToString());
+        */	 
+        if((Convert.ToDecimal(BaseObject.CurrentRow.Row["Quantity"]) * Convert.ToDecimal(gercekGramaj)) &gt; Convert.ToDecimal(uretime_cikis_miktar) )
+        {
+           // MessageBox.Show("Üretime Çıkıştan Büyük");
+           /**/
+            miktar_ = Convert.ToDecimal(BaseObject.CurrentRow.Row["Quantity"]).ToString("#.00").Replace(",",".");
+            ucm_ = uretime_cikis_miktar.ToString().Replace(",",".");
+            gGramaj = gercekGramaj.ToString().Replace(",", ".");
+            
+           
+            send_mail = order_ + " Numaralı Orderin Üretime Çıkan Miktarı = "+ucm_.ToString()+" Beden Miktar Toplamı = "+miktar_.ToString()+" Gerçek Gramaj = "+gGramaj.ToString()+"";
+            //MessageBox.Show(send_mail.ToString());
+            OnSendMail(send_mail);
+            sender.ShowMessage("Girilen Miktar Hesaplaması Üretime Çıkış Miktarından Fazla Olduğu İçin Kayıt Gerçekleştirilemez..scr{KesimKartıUretimeCikisKontrolMail}");
+            ev.Cancel = true;
+            return null;
+        }
+        else
+        {
+         //   MessageBox.Show("Üretime Çıkıştan Küçük");
+        }
+}
+}
+
+function OnSendMail(subject)
+{
+    taskm=BaseObject.Container.Resolve&lt;|TaskMessageService|&gt;("TaskMessageService");
+	taskm.SendEmail(global:const_mail_adress.ToString(),global:mail_konu.ToString(),subject.ToString());
+}
+</ScriptText>
+</ScriptDefinition>

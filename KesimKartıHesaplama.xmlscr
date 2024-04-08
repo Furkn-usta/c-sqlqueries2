@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KesimKartiHesaplama" Enabled="true" Priority="0" ScriptName="KesimKartiHesaplama">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderCuttingProductionEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="TWorkOrderCuttingProductionEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 10.05.2023 16:45:38
+
+function OnBeforePost(sender, e)
+{
+	if (BaseObject == null || BaseObject.CurrentRow == null || BaseObject.CurrentRow.Row == null || !BaseObject.Data.Tables.Contains("MA_WorkOrderProduction") 
+	|| Convert.ToInt32(BaseObject.CurrentRow.Row["ProductionType"])!=100)
+		return null;
+
+   if(!BaseObject.CurrentRow.Row.IsNull("UD_Verimlilik"))
+ {
+	sonuc1=(Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_KulKumaş"])* Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_Verimlilik"])/100);
+	BaseObject.CurrentRow.Row.SetField&lt;|String|&gt;("UD_Sonuc1",sonuc1.ToString());
+   }
+   
+    if(!BaseObject.CurrentRow.Row.IsNull("UD_Fire"))
+ {
+	sonuc2=Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_Sonuc1"])+ Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_Fire"]);
+	BaseObject.CurrentRow.Row.SetField&lt;|String|&gt;("UD_Sonuc2",sonuc2.ToString());
+   }
+   
+   if(!BaseObject.CurrentRow.Row.IsNull("UD_Fire") || !BaseObject.CurrentRow.Row.IsNull("UD_Sonuc2"))
+ {
+    kirpinti=Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_KulKumaş"])- Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_Sonuc2"]);
+	BaseObject.CurrentRow.Row.SetField&lt;|String|&gt;("UD_Kirpinti",kirpinti.ToString());
+
+   }
+ }
+	
+	
+
+
+</ScriptText>
+</ScriptDefinition>

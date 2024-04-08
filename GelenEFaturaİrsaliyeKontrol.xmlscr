@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="GelenEFaturaİrsaliyeKontrol" Enabled="true" Priority="0" ScriptName="GelenEFaturaİrsaliyeKontrol">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+    <Event Enabled="true" ObjectName="InvoiceVM" />
+    <Event Enabled="true" EventName="BeforeCommandExecution" FunctionName="OnBeforeCommandExecution" ObjectName="InvoiceVM" />
+  </Events>
+  <Histories />
+  <ScriptText> gLock = false;
+function OnBeforePost(sender,ev)
+{
+    if(BaseObject == null 
+      || BaseObject.CurrentRow == null 
+      || BaseObject.CurrentRow.Row == null
+      || BaseObject.CurrentRow.Row.IsNull("EInvoiceGuid")  //e-Fatura Guid
+      || BaseObject.CurrentRow.Row.IsNull("RecId")  
+      || Convert.ToInt16(BaseObject.CurrentRow.Row["RecId"]) &lt;= 0
+      || BaseObject.CurrentRow.Row.IsNull("InsertedAt"))
+              return null;
+              
+    	rec_ = Convert.ToInt16(BaseObject.CurrentRow.Row["RecId"]);
+		inserted_date = Convert.ToDateTime(BaseObject.CurrentRow.Row["InsertedAt"]);
+            l_sb = new StringBuilder();
+            l_sb.Clear();
+            l_sb.AppendLine(" select DATEDIFF(ss,R.InsertedAt,convert(datetime,\'"+inserted_date.ToString()+"\',104)) [diff] from IM_Receipt R with (nolock) where R.InvoiceId =\'"+rec_.ToString()+"\'");
+          // MessageBox.Show(l_sb.ToString());
+            l_dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "l_dt",l_sb.ToString());
+           
+            if(l_dt == null || l_dt.Rows.Count &lt;=0)
+           	    return null;
+           	    diff_ = Convert.ToInt32(l_dt.Rows[0]["diff"]);
+            if(diff_ == 0)
+            {
+                sender.ShowMessage("İrsaliyesi Bağlantısı Olmadığı İçin Kayıt Yapılamaz..!..scr{GelenEFaturaİrsaliyeKontrol}");
+                global:gLock = true;
+                ev.Cancel=true;
+                return null;
+            }
+}
+
+
+function OnBeforeCommandExecution(sender, cmd)
+{
+	
+	if(BaseObject.ActiveEntity == null 
+	|| BaseObject.ActiveEntity.CurrentRow == null 
+	|| BaseObject.ActiveEntity.CurrentRow.Row == null)
+		return null;
+		
+    	cn_ = cmd.CommandName;
+    	
+       if(cn_.ToString() == "PostDataCommand")
+        {
+        	if(global:gLock==true)
+        	{
+        		cmd.Cancel = true;
+				return null;
+        	}
+        }
+}</ScriptText>
+</ScriptDefinition>

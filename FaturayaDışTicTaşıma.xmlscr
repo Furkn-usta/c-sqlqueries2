@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="Faturaya Dış Tic Taşıma" Enabled="true" Priority="0" ScriptName="Faturaya Dış TicTaşıma">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>function OnBeforePost(sender, eventArg)
+{ 
+	if(eventArg.Cancel)
+		return null;
+/*
+    if(BaseObject.ActiveSession.User.RecId != 1)
+        return null;
+*/
+	if (BaseObject!=null 
+    &amp;&amp; BaseObject.CurrentRow != null 
+    &amp;&amp; BaseObject.CurrentRow.Row != null 
+    &amp;&amp; (BaseObject.CurrentRow.Row["ReceiptType"]==120) 
+    &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("CurrentAccountId"))
+	{ 
+	if(!BaseObject.CurrentRow.Row.IsNull("ForexRate"))
+		forex_rate = Convert.ToDecimal(BaseObject.CurrentRow.Row["ForexRate"]);
+	else
+		forex_rate = 0;
+	
+		MessageBox.Show(forex_rate.ToString());
+		
+        query = "select isnull(UD_Dtic,0) [dtic] ,isnull(UD_Dexp,0) [dexp] ,isnull(UD_ExType,\'\') [extype] from FI_Account where RecId="+BaseObject.CurrentRow.Row["CurrentAccountId"].ToString();
+		dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query);			 
+	
+	    BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("ForexRate",Convert.ToDecimal(forex_rate));
+
+		if(dt.Rows.Count==0)
+			return null;
+
+		if(!dt.Rows[0].IsNull("dtic"))
+			BaseObject.CurrentRow.Row.SetField&lt;|int|&gt;("IsEximReceipt",dt.Rows[0]["dtic"]);
+		//	MessageBox.Show(BaseObject.CurrentRow.Row["ForexRate"].ToString());
+	
+		if(!dt.Rows[0].IsNull("dexp"))
+			BaseObject.CurrentRow.Row.SetField&lt;|int|&gt;("IsExportRegistered",dt.Rows[0]["dexp"] );
+           // MessageBox.Show(BaseObject.CurrentRow.Row["ForexRate"].ToString());
+	
+	
+        query_ ="select isnull(RecId,0) [rec] from MD_ExceptionType  where Code=\'"+dt.Rows[0]["extype"].ToString()+"\'";
+		dt2 = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt2",query_);			 
+        //MessageBox.Show(BaseObject.CurrentRow.Row["ForexRate"].ToString());
+	    BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("ForexRate",Convert.ToDecimal(forex_rate));
+
+		if(dt2.Rows.Count==0)
+			return null;
+			
+	
+		BaseObject.CurrentRow.Row.SetField&lt;|int|&gt;("ExceptionTypeId",Convert.ToInt32(dt2.Rows[0]["rec"]));
+		BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("ForexRate",Convert.ToDecimal(forex_rate));
+
+	}
+}
+
+</ScriptText>
+</ScriptDefinition>

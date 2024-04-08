@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="Üretim Emrii Özel Alanlara SabitDeğer Atama" Enabled="false" Priority="0" ScriptName="İşletme Reçetesi Özel Alanlara Değer Atama">
+  <Events>
+    <Event Enabled="true" ObjectName="WorkOrderEN" />
+    <Event Enabled="true" EventName="ColumnChanged" FunctionName="OnColumnChanged" ObjectName="WorkOrderEN" />
+  </Events>
+  <Histories>
+    <History EditedBy="Onur Açan" EntryDate="2016-05-13T00:00:00">
+      <Change />
+    </History>
+  </Histories>
+  <ScriptText>//Generated on 13.05.2016 14:09:22
+function OnColumnChanged(sender,e){	
+	if(e!=null &amp;&amp; BaseObject!=null 
+	  &amp;&amp; BaseObject.CurrentRow!=null 
+	  &amp;&amp; BaseObject.CurrentRow.Row!=null 
+	  &amp;&amp; BaseObject.IsNewRecord 
+	  &amp;&amp; e.Row.Table.TableName=="MA_WorkOrder" 
+	  &amp;&amp; e.Column.ColumnName=="CurrentAccountId"){
+	 	e.Row.SetField&lt;|decimal|&gt;("UD_PompaHizi",(decimal)80);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_KuleHizi",(decimal)50);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_Duze",(decimal)60);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WKumasSu",(decimal)0);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WAkLitre",(decimal)0);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WAkOran",(decimal)7);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WAkBoyaOrani",(decimal)7);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WAkTuz",(decimal)0);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WAkYikamaLitre",(decimal)0);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WRkLitre",(decimal)0);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WRkOran",(decimal)5);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WRkBoyaOrani",(decimal)5);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WRkTuz",(decimal)0);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WRKYikamaOrani",(decimal)0);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WKuleIlkHizi",(decimal)30);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WTursuresi",(decimal)2.5);
+ 		e.Row.SetField&lt;|decimal|&gt;("UD_WDusS",(decimal)2);		
+	}	
+}</ScriptText>
+</ScriptDefinition>

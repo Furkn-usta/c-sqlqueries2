@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FaturaRenkBeden" Enabled="true" Priority="0" ScriptName="FaturaRenkBeden">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 29.06.2022 12:27:56
+
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null || BaseObject.Data == null || BaseObject.Data.Tables == null || !BaseObject.Data.Tables.Contains("IM_ReceiptItem"))
+		return null;
+	
+	foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null"))
+	{
+	     variants  = "0";
+	     foreach(subdr in BaseObject.Data.Tables["IM_ReceiptItemVariant"].Select("InventoryReceiptItemId="+dr["RecId"].ToString()))
+	     {
+	       variants  += ", " + subdr["InventoryVariantId"].ToString();
+	     }
+	
+	     r = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "r", "select STRING_AGG(ItemCode, \' \') vres from (select distinct VIS.ItemCode from IM_ItemVariant IV with(nolock) left join IM_VariantItem VIS with(nolock) on VIS.RecId = IV.Variant1Id where IV.RecId in ("+variants+")) x");
+	     if(r == null || r.Rows.Count &lt;= 0)
+	          continue;
+	
+		qurey="select cast(sum(rei.PackageQuantity) as decimal)from IM_ReceiptItem  rei left join IM_Receipt re on rei.InventoryReceiptId=re.RecId left join IM_Invoice i on i.RecId=re.InvoiceId where i.RecId="+BaseObject.CurrentRow.Row["RecId"].ToString();
+		r1 = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "r1",qurey); 
+       query2="select cast (rei.PackageQuantity as decimal),* from IM_ReceiptItem  rei  left join IM_Receipt re on rei.InventoryReceiptId=re.RecId left join IM_Invoice i on i.RecId=re.InvoiceId where  rei.PackageQuantity is not null and i.RecId="+BaseObject.CurrentRow.Row["RecId"].ToString();
+       		r2 = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "r2",query2); 
+
+		satir="|"+dr["UD_MOzelKod"].ToString()+"*"+r2.Rows[0][0].ToString()+"!"+r1.Rows[0][0].ToString()+"^";
+	 
+	
+	
+		 explStr = "#VRes=" + r.Rows[0]["vres"].ToString() + "@#PkgCount=" + dr["PackageQuantity"].ToString(System.Globalization.CultureInfo.InvariantCulture) + "@";
+		 
+	     dr.SetField&lt;|string|&gt;("UD_EInvoiceItemExplanation", explStr+" "+satir.ToString());
+	 }
+}</ScriptText>
+</ScriptDefinition>

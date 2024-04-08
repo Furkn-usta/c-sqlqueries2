@@ -1,0 +1,311 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KesimPastalPlanlamaToplamlarİlkSatırEngelleme" Enabled="true" Priority="0" ScriptName="KesimPastalPlanlamaToplamlarİlkSatırEngelleme">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderCuttingProductionVM " />
+    <Event Enabled="true" EventName="BeforeCommandExecution" FunctionName="OnBeforeCommandExecution" ObjectName="TWorkOrderCuttingProductionVM " />
+  </Events>
+  <Histories>
+    <History EditedBy="Furkan Usta" EntryDate="2023-10-04T00:00:00">
+      <Change>Kesim Pastal Planlama ekranında planlama butonuna basılınca açılan ekranda toplamlar kısmında ilk satır baz alınmadan beden bazlı ve toplu olarak diğer adetlerin yazılmasını sağlar.
+</Change>
+    </History>
+  </Histories>
+  <ScriptText>//Generated on 3.10.2023 17:41:49 KesimPastalPlanlamaToplamlarİlkSatırEngelleme
+/*
+Kesim Pastal Planlama ekranında planlama butonuna basılınca açılan ekranda toplamlar kısmında ilk satır baz alınmadan beden bazlı ve toplu olarak diğer adetlerin yazılmasını sağlar.
+*/
+gLock = 0;
+s0_ = 0;
+s1_ = 0;
+s2_ = 0;
+s3_ = 0;
+s4_ = 0;
+s5_ = 0;
+s6_ = 0;
+s7_ = 0;
+s8_ = 0;
+s9_ = 0;
+s10_ =0;
+s11_ =0;
+s12_ =0;
+s13_ =0;
+s14_ =0;
+s15_ =0;
+s16_ =0;
+s17_ =0;
+s18_ =0;
+s19_ =0;
+s20_ =0;
+s21_ =0;
+s22_ =0;
+s23_ =0;
+s24_ =0;
+s25_ =0;
+s26_ =0;
+s27_ =0;
+s28_ =0;
+s29_ =0;
+s30_ =0;
+s31_ =0;
+s32_ =0;
+s33_ =0;
+s34_ =0;
+s35_ =0;
+s36_ =0;
+s37_ =0;
+s38_ =0;
+s39_ =0;
+s40_ =0;
+s41_ =0;
+s42_ =0;
+s43_ =0;
+s44_ =0;
+s45_ =0;
+s46_ =0;
+s47_ =0;
+s48_ =0;
+s49_ =0;
+s50_ =0;
+c_s0_ = 0;
+c_s1_ = 0;
+c_s2_ = 0;
+c_s3_ = 0;
+c_s4_ = 0;
+c_s5_ = 0;
+c_s6_ = 0;
+c_s7_ = 0;
+c_s8_ = 0;
+c_s9_ = 0;
+c_s10_ =0;
+c_s11_ =0;
+c_s12_ =0;
+c_s13_ =0;
+c_s14_ =0;
+c_s15_ =0;
+c_s16_ =0;
+c_s17_ =0;
+c_s18_ =0;
+c_s19_ =0;
+c_s20_ =0;
+c_s21_ =0;
+c_s22_ =0;
+c_s23_ =0;
+c_s24_ =0;
+c_s25_ =0;
+c_s26_ =0;
+c_s27_ =0;
+c_s28_ =0;
+c_s29_ =0;
+c_s30_ =0;
+c_s31_ =0;
+c_s32_ =0;
+c_s33_ =0;
+c_s34_ =0;
+c_s35_ =0;
+c_s36_ =0;
+c_s37_ =0;
+c_s38_ =0;
+c_s39_ =0;
+c_s40_ =0;
+c_s41_ =0;
+c_s42_ =0;
+c_s43_ =0;
+c_s44_ =0;
+c_s45_ =0;
+c_s46_ =0;
+c_s47_ =0;
+c_s48_ =0;
+c_s49_ =0;
+c_s50_ =0;
+function OnBeforeCommandExecution(sender, cmd)
+{
+    if (cmd.CommandName != "AfterGetCuttingProductionCommand")
+        return null;
+   //UD_PlannedControl
+         foreach(iRow in BaseObject.ItemDetailDataTable.Rows) 
+         { 
+         exp_ = iRow["Explanation"].ToString().Trim();
+         oion_ = iRow["UD_PlannedControl"].ToString().Trim();
+        if(iRow["OperationItemOrderNo"] == 1)
+         iRow.SetField&lt;|int|&gt;("UD_PlannedControl",1);
+	         if(oion_ == 1)
+		         {
+			        global:s0_ = Convert.ToInt32(iRow["SText0"]);
+					global:s1_ = Convert.ToInt32(iRow["SText1"]);
+					global:s2_ = Convert.ToInt32(iRow["SText2"]);
+					global:s3_ = Convert.ToInt32(iRow["SText3"]);
+					global:s4_ = Convert.ToInt32(iRow["SText4"]);
+					global:s5_ = Convert.ToInt32(iRow["SText5"]);
+					global:s6_ = Convert.ToInt32(iRow["SText6"]);
+					global:s7_ = Convert.ToInt32(iRow["SText7"]);
+					global:s8_ = Convert.ToInt32(iRow["SText8"]);
+					global:s9_ = Convert.ToInt32(iRow["SText9"]);
+					global:s10_ = Convert.ToInt32(iRow["SText10"]);
+					global:s11_ = Convert.ToInt32(iRow["SText11"]);
+					global:s12_ = Convert.ToInt32(iRow["SText12"]);
+					global:s13_ = Convert.ToInt32(iRow["SText13"]);
+					global:s14_ = Convert.ToInt32(iRow["SText14"]);
+					global:s15_ = Convert.ToInt32(iRow["SText15"]);
+					global:s16_ = Convert.ToInt32(iRow["SText16"]);
+					global:s17_ = Convert.ToInt32(iRow["SText17"]);
+					global:s18_ = Convert.ToInt32(iRow["SText18"]);
+					global:s19_ = Convert.ToInt32(iRow["SText19"]);
+					global:s20_ = Convert.ToInt32(iRow["SText20"]);
+					global:s21_ = Convert.ToInt32(iRow["SText21"]);
+					global:s22_ = Convert.ToInt32(iRow["SText22"]);
+					global:s23_ = Convert.ToInt32(iRow["SText23"]);
+					global:s24_ = Convert.ToInt32(iRow["SText24"]);
+					global:s25_ = Convert.ToInt32(iRow["SText25"]);
+					global:s26_ = Convert.ToInt32(iRow["SText26"]);
+					global:s27_ = Convert.ToInt32(iRow["SText27"]);
+					global:s28_ = Convert.ToInt32(iRow["SText28"]);
+					global:s29_ = Convert.ToInt32(iRow["SText29"]);
+					global:s30_ = Convert.ToInt32(iRow["SText30"]);
+					global:s31_ = Convert.ToInt32(iRow["SText31"]);
+					global:s32_ = Convert.ToInt32(iRow["SText32"]);
+					global:s33_ = Convert.ToInt32(iRow["SText33"]);
+					global:s34_ = Convert.ToInt32(iRow["SText34"]);
+					global:s35_ = Convert.ToInt32(iRow["SText35"]);
+					global:s36_ = Convert.ToInt32(iRow["SText36"]);
+					global:s37_ = Convert.ToInt32(iRow["SText37"]);
+					global:s38_ = Convert.ToInt32(iRow["SText38"]);
+					global:s39_ = Convert.ToInt32(iRow["SText39"]);
+					global:s40_ = Convert.ToInt32(iRow["SText40"]);
+					global:s41_ = Convert.ToInt32(iRow["SText41"]);
+					global:s42_ = Convert.ToInt32(iRow["SText42"]);
+					global:s43_ = Convert.ToInt32(iRow["SText43"]);
+					global:s44_ = Convert.ToInt32(iRow["SText44"]);
+					global:s45_ = Convert.ToInt32(iRow["SText45"]);
+					global:s46_ = Convert.ToInt32(iRow["SText46"]);
+					global:s47_ = Convert.ToInt32(iRow["SText47"]);
+					global:s48_ = Convert.ToInt32(iRow["SText48"]);
+					global:s49_ = Convert.ToInt32(iRow["SText49"]);
+					global:s50_ = Convert.ToInt32(iRow["SText50"]);
+				stop_ = global:s0_+global:s1_ +global:s2_+global:s3_+global:s4_ +global:s5_ +global:s6_ +global:s7_ +global:s8_ +global:s9_ +global:s10_+global:s11_+global:s12_+global:s13_+global:s14_+global:s15_+global:s16_+global:s17_+global:s18_+global:s19_+global:s20_+global:s21_+global:s22_+global:s23_+global:s24_+global:s25_+global:s26_+global:s27_+global:s28_+global:s29_+global:s30_+global:s31_+global:s32_+global:s33_+global:s34_+global:s35_+global:s36_+global:s37_+global:s38_+global:s39_+global:s40_+global:s41_+global:s42_+global:s43_+global:s44_+global:s45_+global:s46_+global:s47_+global:s48_+global:s49_+global:s50_; 
+				global:gLock = Convert.ToInt32(stop_);
+		         }
+	     }
+        
+          foreach(itemRow in BaseObject.CumulativeSizeDataTable.Select("")) //Explanation = \'2\'
+		     {
+			    cum_exp_ = itemRow["Explanation"].ToString().Trim();
+			     if(cum_exp_ == "Planlanan")
+				     { 
+					    global:c_s0_ = Convert.ToInt32(itemRow["SText0"]);
+						global:c_s1_ = Convert.ToInt32(itemRow["SText1"]);
+						global:c_s2_ = Convert.ToInt32(itemRow["SText2"]);
+						global:c_s3_ = Convert.ToInt32(itemRow["SText3"]);
+						global:c_s4_ = Convert.ToInt32(itemRow["SText4"]);
+						global:c_s5_ = Convert.ToInt32(itemRow["SText5"]);
+						global:c_s6_ = Convert.ToInt32(itemRow["SText6"]);
+						global:c_s7_ = Convert.ToInt32(itemRow["SText7"]);
+						global:c_s8_ = Convert.ToInt32(itemRow["SText8"]);
+						global:c_s9_ = Convert.ToInt32(itemRow["SText9"]);
+						global:c_s10_ = Convert.ToInt32(itemRow["SText10"]);
+						global:c_s11_ = Convert.ToInt32(itemRow["SText11"]);
+						global:c_s12_ = Convert.ToInt32(itemRow["SText12"]);
+						global:c_s13_ = Convert.ToInt32(itemRow["SText13"]);
+						global:c_s14_ = Convert.ToInt32(itemRow["SText14"]);
+						global:c_s15_ = Convert.ToInt32(itemRow["SText15"]);
+						global:c_s16_ = Convert.ToInt32(itemRow["SText16"]);
+						global:c_s17_ = Convert.ToInt32(itemRow["SText17"]);
+						global:c_s18_ = Convert.ToInt32(itemRow["SText18"]);
+						global:c_s19_ = Convert.ToInt32(itemRow["SText19"]);
+						global:c_s20_ = Convert.ToInt32(itemRow["SText20"]);
+						global:c_s21_ = Convert.ToInt32(itemRow["SText21"]);
+						global:c_s22_ = Convert.ToInt32(itemRow["SText22"]);
+						global:c_s23_ = Convert.ToInt32(itemRow["SText23"]);
+						global:c_s24_ = Convert.ToInt32(itemRow["SText24"]);
+						global:c_s25_ = Convert.ToInt32(itemRow["SText25"]);
+						global:c_s26_ = Convert.ToInt32(itemRow["SText26"]);
+						global:c_s27_ = Convert.ToInt32(itemRow["SText27"]);
+						global:c_s28_ = Convert.ToInt32(itemRow["SText28"]);
+						global:c_s29_ = Convert.ToInt32(itemRow["SText29"]);
+						global:c_s30_ = Convert.ToInt32(itemRow["SText30"]);
+						global:c_s31_ = Convert.ToInt32(itemRow["SText31"]);
+						global:c_s32_ = Convert.ToInt32(itemRow["SText32"]);
+						global:c_s33_ = Convert.ToInt32(itemRow["SText33"]);
+						global:c_s34_ = Convert.ToInt32(itemRow["SText34"]);
+						global:c_s35_ = Convert.ToInt32(itemRow["SText35"]);
+						global:c_s36_ = Convert.ToInt32(itemRow["SText36"]);
+						global:c_s37_ = Convert.ToInt32(itemRow["SText37"]);
+						global:c_s38_ = Convert.ToInt32(itemRow["SText38"]);
+						global:c_s39_ = Convert.ToInt32(itemRow["SText39"]);
+						global:c_s40_ = Convert.ToInt32(itemRow["SText40"]);
+						global:c_s41_ = Convert.ToInt32(itemRow["SText41"]);
+						global:c_s42_ = Convert.ToInt32(itemRow["SText42"]);
+						global:c_s43_ = Convert.ToInt32(itemRow["SText43"]);
+						global:c_s44_ = Convert.ToInt32(itemRow["SText44"]);
+						global:c_s45_ = Convert.ToInt32(itemRow["SText45"]);
+						global:c_s46_ = Convert.ToInt32(itemRow["SText46"]);
+						global:c_s47_ = Convert.ToInt32(itemRow["SText47"]);
+						global:c_s48_ = Convert.ToInt32(itemRow["SText48"]);
+						global:c_s49_ = Convert.ToInt32(itemRow["SText49"]);
+						global:c_s50_ = Convert.ToInt32(itemRow["SText50"]);
+						
+				      itemRow.SetField&lt;|int|&gt;("SText0",Convert.ToInt32(global:c_s0_)-Convert.ToInt32(global:s0_));
+				      itemRow.SetField&lt;|int|&gt;("SText1",Convert.ToInt32(global:c_s1_)-Convert.ToInt32(global:s1_));
+				      itemRow.SetField&lt;|int|&gt;("SText2",Convert.ToInt32(global:c_s2_)-Convert.ToInt32(global:s2_));
+				      itemRow.SetField&lt;|int|&gt;("SText3",Convert.ToInt32(global:c_s3_)-Convert.ToInt32(global:s3_));
+				      itemRow.SetField&lt;|int|&gt;("SText4",Convert.ToInt32(global:c_s4_)-Convert.ToInt32(global:s4_));
+				      itemRow.SetField&lt;|int|&gt;("SText5",Convert.ToInt32(global:c_s5_)-Convert.ToInt32(global:s5_));
+				      itemRow.SetField&lt;|int|&gt;("SText6",Convert.ToInt32(global:c_s6_)-Convert.ToInt32(global:s6_));
+				      itemRow.SetField&lt;|int|&gt;("SText7",Convert.ToInt32(global:c_s7_)-Convert.ToInt32(global:s7_));
+				      itemRow.SetField&lt;|int|&gt;("SText8",Convert.ToInt32(global:c_s8_)-Convert.ToInt32(global:s8_));
+				      itemRow.SetField&lt;|int|&gt;("SText9",Convert.ToInt32(global:c_s9_)-Convert.ToInt32(global:s9_));
+				      itemRow.SetField&lt;|int|&gt;("SText10",Convert.ToInt32(global:c_s10_)-Convert.ToInt32(global:s10_));
+				      
+				      itemRow.SetField&lt;|int|&gt;("SText11",Convert.ToInt32(global:c_s11_)-Convert.ToInt32(global:s11_));
+				      itemRow.SetField&lt;|int|&gt;("SText12",Convert.ToInt32(global:c_s12_)-Convert.ToInt32(global:s12_));
+				      itemRow.SetField&lt;|int|&gt;("SText13",Convert.ToInt32(global:c_s13_)-Convert.ToInt32(global:s13_));
+				      itemRow.SetField&lt;|int|&gt;("SText14",Convert.ToInt32(global:c_s14_)-Convert.ToInt32(global:s14_));
+				      itemRow.SetField&lt;|int|&gt;("SText15",Convert.ToInt32(global:c_s15_)-Convert.ToInt32(global:s15_));
+				      itemRow.SetField&lt;|int|&gt;("SText16",Convert.ToInt32(global:c_s16_)-Convert.ToInt32(global:s16_));
+				      itemRow.SetField&lt;|int|&gt;("SText17",Convert.ToInt32(global:c_s17_)-Convert.ToInt32(global:s17_));
+				      itemRow.SetField&lt;|int|&gt;("SText18",Convert.ToInt32(global:c_s18_)-Convert.ToInt32(global:s18_));
+				      itemRow.SetField&lt;|int|&gt;("SText19",Convert.ToInt32(global:c_s19_)-Convert.ToInt32(global:s19_));
+				      itemRow.SetField&lt;|int|&gt;("SText20",Convert.ToInt32(global:c_s20_)-Convert.ToInt32(global:s20_));
+				      
+				      itemRow.SetField&lt;|int|&gt;("SText21",Convert.ToInt32(global:c_s21_)-Convert.ToInt32(global:s21_));
+				      itemRow.SetField&lt;|int|&gt;("SText22",Convert.ToInt32(global:c_s22_)-Convert.ToInt32(global:s22_));
+				      itemRow.SetField&lt;|int|&gt;("SText23",Convert.ToInt32(global:c_s23_)-Convert.ToInt32(global:s23_));
+				      itemRow.SetField&lt;|int|&gt;("SText24",Convert.ToInt32(global:c_s24_)-Convert.ToInt32(global:s24_));
+				      itemRow.SetField&lt;|int|&gt;("SText25",Convert.ToInt32(global:c_s25_)-Convert.ToInt32(global:s25_));
+				      itemRow.SetField&lt;|int|&gt;("SText26",Convert.ToInt32(global:c_s26_)-Convert.ToInt32(global:s26_));
+				      itemRow.SetField&lt;|int|&gt;("SText27",Convert.ToInt32(global:c_s27_)-Convert.ToInt32(global:s27_));
+				      itemRow.SetField&lt;|int|&gt;("SText28",Convert.ToInt32(global:c_s28_)-Convert.ToInt32(global:s28_));
+				      itemRow.SetField&lt;|int|&gt;("SText29",Convert.ToInt32(global:c_s29_)-Convert.ToInt32(global:s29_));
+				      itemRow.SetField&lt;|int|&gt;("SText30",Convert.ToInt32(global:c_s30_)-Convert.ToInt32(global:s30_));
+				      
+				      itemRow.SetField&lt;|int|&gt;("SText31",Convert.ToInt32(global:c_s31_)-Convert.ToInt32(global:s31_));
+				      itemRow.SetField&lt;|int|&gt;("SText32",Convert.ToInt32(global:c_s32_)-Convert.ToInt32(global:s32_));
+				      itemRow.SetField&lt;|int|&gt;("SText33",Convert.ToInt32(global:c_s33_)-Convert.ToInt32(global:s33_));
+				      itemRow.SetField&lt;|int|&gt;("SText34",Convert.ToInt32(global:c_s34_)-Convert.ToInt32(global:s34_));
+				      itemRow.SetField&lt;|int|&gt;("SText35",Convert.ToInt32(global:c_s35_)-Convert.ToInt32(global:s35_));
+				      itemRow.SetField&lt;|int|&gt;("SText36",Convert.ToInt32(global:c_s36_)-Convert.ToInt32(global:s36_));
+				      itemRow.SetField&lt;|int|&gt;("SText37",Convert.ToInt32(global:c_s37_)-Convert.ToInt32(global:s37_));
+				      itemRow.SetField&lt;|int|&gt;("SText38",Convert.ToInt32(global:c_s38_)-Convert.ToInt32(global:s38_));
+				      itemRow.SetField&lt;|int|&gt;("SText39",Convert.ToInt32(global:c_s39_)-Convert.ToInt32(global:s39_));
+				      itemRow.SetField&lt;|int|&gt;("SText40",Convert.ToInt32(global:c_s40_)-Convert.ToInt32(global:s40_));
+				      
+				      
+				      itemRow.SetField&lt;|int|&gt;("SText41",Convert.ToInt32(global:c_s41_)-Convert.ToInt32(global:s41_));
+				      itemRow.SetField&lt;|int|&gt;("SText42",Convert.ToInt32(global:c_s42_)-Convert.ToInt32(global:s42_));
+				      itemRow.SetField&lt;|int|&gt;("SText43",Convert.ToInt32(global:c_s43_)-Convert.ToInt32(global:s43_));
+				      itemRow.SetField&lt;|int|&gt;("SText44",Convert.ToInt32(global:c_s44_)-Convert.ToInt32(global:s44_));
+				      itemRow.SetField&lt;|int|&gt;("SText45",Convert.ToInt32(global:c_s45_)-Convert.ToInt32(global:s45_));
+				      itemRow.SetField&lt;|int|&gt;("SText46",Convert.ToInt32(global:c_s46_)-Convert.ToInt32(global:s46_));
+				      itemRow.SetField&lt;|int|&gt;("SText47",Convert.ToInt32(global:c_s47_)-Convert.ToInt32(global:s47_));
+				      itemRow.SetField&lt;|int|&gt;("SText48",Convert.ToInt32(global:c_s48_)-Convert.ToInt32(global:s48_));
+				      itemRow.SetField&lt;|int|&gt;("SText49",Convert.ToInt32(global:c_s49_)-Convert.ToInt32(global:s49_));
+				      itemRow.SetField&lt;|int|&gt;("SText50",Convert.ToInt32(global:c_s50_)-Convert.ToInt32(global:s50_));
+				      
+				      itemRow.SetField&lt;|int|&gt;("TotalQuantity",Convert.ToInt32(itemRow["TotalQuantity"])-Convert.ToInt32(global:gLock));
+				      } 
+         	}
+       
+        
+    }
+    
+    </ScriptText>
+</ScriptDefinition>

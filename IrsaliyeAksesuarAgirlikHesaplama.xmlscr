@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="IrsaliyeAksesuarAgirlikHesaplama" Enabled="true" Priority="0" ScriptName="IrsaliyeAksesuarAgirlikHesaplama">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 6.04.2024 12:03:56 IrsaliyeAksesuarAgirlikHesaplama
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("ReceiptType")
+    )
+		return null;
+	
+                sb = new StringBuilder();
+                foreach(ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("InventoryId is not null and Quantity &gt; 0 "))
+                {	
+                    sb.Clear();
+                    sb.AppendLine(" select isnull(I.UD_Agirlik,0) [agr], isnull(I.AccessCode,\'\') [ac_code] from IM_Item I with (nolock) where I.RecId=\'"+ri["InventoryId"].ToString()+"\'");
+                    
+                    //MessageBox.Show(sb.ToString());
+                    dt_sb = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_sb",sb.ToString());
+                    if(dt_sb != null &amp;&amp; dt_sb.Rows.Count &gt; 0 &amp;&amp; dt_sb.Rows[0]["ac_code"].ToString().Trim() == "TRIM")
+                        {
+                        agr_ = Convert.ToDecimal(dt_sb.Rows[0]["agr"]);        
+                        tot_agr_ = Convert.ToDecimal(ri["Quantity"]) * Convert.ToDecimal(agr_);
+                        ri.SetField&lt;|decimal|&gt;("UD_TAgirlik",Convert.ToDecimal(tot_agr_));
+                        }
+                   
+                }
+}</ScriptText>
+</ScriptDefinition>

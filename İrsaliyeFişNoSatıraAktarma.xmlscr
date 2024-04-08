@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyeFişNoSatıraAktarma" Enabled="true" Priority="0" ScriptName="İrsaliyeFişNoSatıraAktarma">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 10.05.2023 16:27:13	
+/*
+İrsaliyelerde fiş numarasını satırda bulunan özel alana aktarmaktadır.
+*/
+function OnBeforePost(sender,ev)
+{		
+	if (BaseObject == null 
+	|| BaseObject.CurrentRow == null
+	|| BaseObject.CurrentRow.Row == null
+	|| BaseObject.CurrentRow.Row.IsNull("ReceiptNo"))
+		return null;
+
+    foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select(""))
+ 	{
+        dr.SetField&lt;|string|&gt;("UD_ReceiptNo",BaseObject.CurrentRow.Row["ReceiptNo"].ToString());
+    } 
+}</ScriptText>
+</ScriptDefinition>

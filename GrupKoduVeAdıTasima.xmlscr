@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="GrupKoduVeAdiTasima" Enabled="true" Priority="0" ScriptName="GrupKoduVeAdiTasima">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 20.02.2023 17:49:57
+function OnBeforePost(sender,ev)
+{
+if(BaseObject==null
+||BaseObject.CurrentRow==null
+||BaseObject.CurrentRow.Row==null
+||BaseObject.CurrentRow.Row.IsNull("GroupId"))
+return null;
+
+query="select isnull(IG.GroupCode,\'-\') [gc], isnull(IG.GroupName,\'-\') [gn] from IM_Group IG with (nolock) where IG.RecId="+BaseObject.CurrentRow.Row["GroupId"].ToString();
+dt=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query); 
+	if(dt==null || dt==null)
+		return null;
+
+	BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("UD_GroupCode",dt.Rows[0]["gc"]);
+	BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("UD_GroupName",dt.Rows[0]["gn"]);
+	
+}</ScriptText>
+</ScriptDefinition>

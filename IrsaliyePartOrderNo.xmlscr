@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="120E_IrsaliyePartOrderNo" Enabled="true" Priority="0" ScriptName="120E-IrsaliyePartOrderNo">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>function OnBeforePost(sender,eventArg){
+	if(BaseObject!=null &amp;&amp; BaseObject.CurrentRow!=null &amp;&amp; BaseObject.CurrentRow.Row!=null  &amp;&amp; BaseObject.IsNewRecord &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("ReceiptType") &amp;&amp; (Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"])==120 || Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"])==121) &amp;&amp; BaseObject.CurrentRow.Row.RowState!=DataRowState.Deleted &amp;&amp; BaseObject.CurrentRow.Row.RowState!=DataRowState.Detached){ 
+        foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select("InventoryId is not null and isnull(PackagingListItemId,0)&gt;0")){
+            if(dr.RowState!=DataRowState.Deleted &amp;&amp; dr.RowState!=DataRowState.Deleted){
+                str="select isnull(WOI.PartOrderNo,\'\') PONO from IM_PackagingList PL with (nolock) left join IM_PackagingListItem PLI with (nolock) on PL.RecId=PLI.PackagingListId left join MA_WorkOrderItem WOI with (nolock) on WOI.RecId=PLI.WorkOrderItemId where PLI.RecId="+Convert.ToInt64(dr["PackagingListItemId"]);	    
+	            dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",str);	
+		        if(dt!=null &amp;&amp; dt.Rows.Count&gt;0 &amp;&amp; !dt.Rows[0].IsNull("PONO") &amp;&amp; dt.Rows[0]["PONO"].ToString().Trim()!="")
+	                dr.SetField&lt;|String|&gt;("CustomerOrderNo",dt.Rows[0]["PONO"].ToString().Substring(0,24));
+		    } 
+        }	
+        BaseObject.CurrentRow.Row.SetField&lt;|String|&gt;("Explanation","");      
+	}
+}
+ 
+ </ScriptText>
+</ScriptDefinition>

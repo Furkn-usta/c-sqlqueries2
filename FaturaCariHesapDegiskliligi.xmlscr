@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FaturaCariHesapDegiskliliği" Enabled="true" Priority="0" ScriptName="FaturaCariHesapDegiskliliği">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories>
+    <History EditedBy="System generated" EntryDate="2023-08-14T10:01:25.3174678+03:00">
+      <Change>System default version</Change>
+    </History>
+  </Histories>
+  <ScriptText>function OnBeforePost(sender,ev){
+	if(BaseObject != null &amp;&amp; BaseObject.CurrentRow != null &amp;&amp; BaseObject.CurrentRow.Row != null &amp;&amp;(Convert.ToInt32(BaseObject.CurrentRow.Row["IsEInvoice"])==0 || Convert.ToInt32(BaseObject.CurrentRow.Row["IsEArchive"])==0  )){
+
+		 qury="select A.TaxNo from FI_Account A with(nolock) where A.RecId=\'"+BaseObject.CurrentRow.Row["CurrentAccountId"].ToString()+"\'";
+		dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",qury);
+	  	if(dt!=null &amp;&amp; dt.Rows.Count&gt;0)
+		{ qury2="select RecId from FI_Account A with(nolock) where A.UD_Ondeger=1 and  A.TaxNo=\'"+dt.Rows[0][0].ToString()+"\'";}
+		dt2 = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt2",qury2); 
+		  	if(dt2!=null &amp;&amp; dt2.Rows.Count&gt;0)
+				BaseObject.CurrentRow.Row.SetField&lt;|int|&gt;("CurrentAccountId",Convert.ToInt64(dt2.Rows[0][0]));
+			}
+
+}</ScriptText>
+</ScriptDefinition>

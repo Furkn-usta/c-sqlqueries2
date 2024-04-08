@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="GenelGiderKomisyonAktarimi" Enabled="true" Priority="0" ScriptName="GenelGiderKomisyonAktarimi">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="TWorkOrderEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 22.11.2022 10:08:45
+
+function OnBeforePost(sender,ev)
+{
+if(BaseObject==null || BaseObject.CurrentRow==null || BaseObject.CurrentRow.Row==null || BaseObject.CurrentRow.Row.IsNull("InitialCostId"))
+return null;
+
+query="Select MI.RecId [rec], MI.CommissionPercent [gdr], MI.GeneralExpensePercent [kmsyn] from MA_InitialCost MI where MI.RecId= "+Convert.ToInt64(BaseObject.CurrentRow.Row["InitialCostId"]);
+dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt", query);
+
+if(dt==null &amp;&amp;  dt.Rows.Count&lt;0)
+	return null;
+   
+if(String.IsNullOrWhiteSpace(dt.Rows[0]["rec"].ToString()) || String.IsNullOrWhiteSpace(dt.Rows[0]["kmsyn"].ToString()) || String.IsNullOrWhiteSpace(dt.Rows[0]["gdr"].ToString()))
+     return null;
+
+komisyon=dt.Rows[0]["kmsyn"].ToString(); 
+idd=dt.Rows[0]["rec"].ToString();
+gider=dt.Rows[0]["gdr"].ToString(); 
+
+ if(BaseObject.CurrentRow.Row["InitialCostId"].ToString()==idd.ToString())
+{
+BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("ComissionPercent",Convert.ToDecimal(gider));
+BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("GeneralExpensePercent",Convert.ToDecimal(komisyon));
+}
+}</ScriptText>
+</ScriptDefinition>

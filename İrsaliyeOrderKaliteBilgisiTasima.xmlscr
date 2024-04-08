@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyeOrderKaliteBilgisiTasima" Enabled="true" Priority="0" ScriptName="İrsaliyeOrderKaliteBilgisiTasima">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 1.02.2024 15:20:09 İrsaliyeOrderKaliteBilgisiTasima
+function OnBeforePost(sender,eventArg)
+{
+ if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("ReceiptType")
+    || Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"]) != 134
+    || BaseObject.CurrentRow.Row.IsNull("ReceiptSubType"))
+    return null;
+   //MessageBox.Show("test");
+    foreach (ia in BaseObject.Data.Tables["IM_ItemAllocation"].Select("InventoryReceiptItemId is not null and WorkOrderItemId is not null "))
+    {
+		  foreach (ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null"))
+			{	
+				if(!ia.IsNull("InventoryReceiptItemId"))	
+				{	
+						if(Convert.ToInt32(ia["InventoryReceiptItemId"]) == Convert.ToInt32(ri["RecId"]))
+						{
+							qry = new StringBuilder();
+							qry.Clear();
+							qry.AppendLine("select isnull(WO.UD_KaliteBilgisi,\'\') [kb] from MA_WorkOrderItem WOI with (nolock)");
+							qry.AppendLine("left join MA_WorkOrder WO with (nolock) on WO.RecId=WOI.WorkOrderId");
+							qry.AppendLine("where WOI.WorkOrderSubType=1 and WOI.RecId=\'"+ia["WorkOrderItemId"].ToString()+"\'");
+							dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",qry.ToString());
+							//MessageBox.Show(qry.ToString());
+							if(dt != null &amp;&amp; dt.Rows.Count&gt;=0 )
+							{    
+							//MessageBox.Show(dt.Rows[0]["rq"].ToString());
+							ri.SetField&lt;|string|&gt;("UD_KaliteBilgisi",dt.Rows[0]["kb"].ToString());
+							}
+						}
+				}
+				
+			}
+		
+    }
+	foreach (ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null"))
+					{
+					rows = ri.GetChildRows("FK_IM_ItemAllocation_IM_OrderReceiptItem");
+					MessageBox.Show("asd");
+					if(rows==null ||rows.Length&lt;=0)
+					{
+				//	MessageBox.Show("qwe");
+							qry = new StringBuilder();
+							qry.Clear();
+							qry.AppendLine("select isnull(WO.UD_KaliteBilgisi,\'\') [kb] from MA_WorkOrderItem WOI with (nolock)");
+							qry.AppendLine("left join MA_WorkOrder WO with (nolock) on WO.RecId=WOI.WorkOrderId");
+							qry.AppendLine("where WOI.WorkOrderSubType=1 and WOI.RecId=\'"+ri["WorkOrderReceiptItemId"].ToString()+"\'");
+							dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",qry.ToString());
+						//	MessageBox.Show(qry.ToString());
+							if(dt != null &amp;&amp; dt.Rows.Count&gt;=0 )
+							{    
+							//MessageBox.Show(dt.Rows[0]["rq"].ToString());
+							ri.SetField&lt;|string|&gt;("UD_KaliteBilgisi",dt.Rows[0]["kb"].ToString());
+							}
+					}
+				}
+}
+
+			
+						
+				</ScriptText>
+</ScriptDefinition>

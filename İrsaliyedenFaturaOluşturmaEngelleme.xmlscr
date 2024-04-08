@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyedenFaturaOluşturmaEngelleme" Enabled="true" Priority="0" ScriptName="İrsaliyedenFaturaOluşturmaEngelleme">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptVM" />
+    <Event Enabled="true" EventName="BeforeCommandExecution" FunctionName="OnBeforeCommandExecution" ObjectName="InventoryReceiptVM" />
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnReceiptBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories>
+    <History EditedBy="Furkan Usta" EntryDate="2023-08-15T00:00:00">
+      <Change>İrsaliye başlığında Faturalaştırılmayacak özel alanı işaretlenir ise irsaliyeden fatura oluşturulmasına izin verilmeyecektir. 
+Aynı şekilde Fatura içerisinden irsaliye kısmından fatura etmek istenilen irsaliye seçildiğinde irsaliye başlığında özel alan işaretlendi ise kayıt yapılmasına izin vermeyecektir.
+</Change>
+    </History>
+  </Histories>
+  <ScriptText>
+//Generated on 15.08.2023 10:27:42	İrsaliyedenFaturaOluşturmaEngelleme	İrsaliyedenFaturaOluşturmaEngelleme	0	True
+/* 
+İrsaliye başlığında Faturalaştırılmayacak özel alanı işaretlenir ise irsaliyeden fatura oluşturulmasına izin verilmeyecektir. 
+Aynı şekilde Fatura içerisinden irsaliye kısmından fatura etmek istenilen irsaliye seçildiğinde irsaliye başlığında özel alan işaretlendi ise kayıt yapılmasına izin vermeyecektir.
+*/
+
+function OnBeforeCommandExecution(sender, cmd)
+{
+	if(cmd.CommandName != "InventoryInvoiceTransferCommand" 
+    || BaseObject.ActiveEntity == null 
+    || BaseObject.ActiveEntity.CurrentRow == null
+    || BaseObject.ActiveEntity.CurrentRow.Row == null
+	|| BaseObject.ActiveEntity.CurrentRow.Row.IsNull("UD_NotInvoice") 
+    || Convert.ToInt32(BaseObject.ActiveEntity.CurrentRow.Row["UD_NotInvoice"]) == 0
+	)
+		return null;
+	
+	BaseObject.SysManager.ActiveWindowManager.ShowMessage("Faturalaştırılmayacak İrsaliyelerde Fatura Oluşturma işlemi yapılamaz! {scr:İrsaliyedenFaturaOluşturmaEngelleme}", ConstantStr.Warning, Zeta.Common.InformationMessages.MessageBoxButton.OK, Zeta.Common.InformationMessages.MessageBoxImage.Exclamation);
+	cmd.Cancel = true;
+	return null;
+}
+
+function OnBeforePost(sender,ev)
+{
+    if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("CurrentAccountId") 
+    )
+        return null;
+
+    if(!BaseObject.CurrentRow.Row.IsNull("OutWarehouseId"))
+    {
+       foreach(ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("InventoryId is not null "))
+	    {
+            query = "select isnull(R.UD_NotInvoice,0) [invoice_status] from IM_Receipt R with (nolock) ";
+            query +=" left join IM_ReceiptItem RI with (nolock) on RI.InventoryReceiptId=R.RecId";
+            query +=" where R.CurrentAccountId=\'"+BaseObject.CurrentRow.Row["CurrentAccountId"].ToString()+"\' and R.OutWarehouseId=\'"+BaseObject.CurrentRow.Row["OutWarehouseId"].ToString()+"\' and RI.InventoryId=\'"+ri["InventoryId"].ToString()+"\' and isnull(R.UD_NotInvoice,0)=1 group by R.UD_NotInvoice";
+            dt=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query);
+           // MessageBox.Show(query.ToString());
+            
+            if(dt == null || dt.Rows.Count &lt;= 0)
+			    return null;
+            invoice_status_ = Convert.ToInt32(dt.Rows[0]["invoice_status"]);
+             if(invoice_status_ == 1)
+           {
+            BaseObject.ShowMessage("Faturalaştırılmayacak İrsaliyelerde Fatura Oluşturma işlemi yapılamaz! {scr:İrsaliyedenFaturaOluşturmaEngelleme}");
+            ev.Cancel = true;
+            return null;
+           }
+        }
+    }
+    else 
+    {
+       foreach(ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("InventoryId is not null "))
+	    {
+            query = "select isnull(R.UD_NotInvoice,0) [invoice_status] from IM_Receipt R with (nolock) ";
+            query +=" left join IM_ReceiptItem RI with (nolock) on RI.InventoryReceiptId=R.RecId";
+            query +=" where R.CurrentAccountId=\'"+BaseObject.CurrentRow.Row["CurrentAccountId"].ToString()+"\' and R.InWarehouseId=\'"+BaseObject.CurrentRow.Row["InWarehouseId"].ToString()+"\' and RI.InventoryId=\'"+ri["InventoryId"].ToString()+"\' and isnull(R.UD_NotInvoice,0)=1 group by R.UD_NotInvoice";
+            dt=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query);
+
+            if(dt == null || dt.Rows.Count &lt;= 0)
+			    return null;
+           invoice_status_ = Convert.ToInt32(dt.Rows[0]["invoice_status"]);
+           if(invoice_status_ == 1)
+           {
+            BaseObject.ShowMessage("Faturalaştırılmayacak İrsaliyelerde Fatura Oluşturma işlemi yapılamaz! {scr:İrsaliyedenFaturaOluşturmaEngelleme}");
+            ev.Cancel = true;
+            return null;
+           }
+        }
+    }
+}
+
+
+function OnReceiptBeforePost(sender,ev)
+{
+    if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null)
+        return null;
+
+    if(BaseObject.ActiveSession.User.RecId == 24 || BaseObject.ActiveSession.User.RecId == 31 || BaseObject.ActiveSession.User.RecId == 1)
+        return null;
+
+        old_value=0;
+		
+		if (BaseObject.CurrentRow.Row["UD_NotInvoice", DataRowVersion.Original] != DBNull.Value)
+			old_value = Convert.ToBoolean(BaseObject.CurrentRow.Row["UD_NotInvoice", DataRowVersion.Original]);
+
+		new_value=0;
+
+		if (BaseObject.CurrentRow.Row["UD_NotInvoice"] != DBNull.Value)
+			new_value = Convert.ToBoolean(BaseObject.CurrentRow.Row["UD_NotInvoice"].ToString());
+    
+        if(old_value != new_value)
+        {
+            sender.ShowMessage("Faturalaştırılmayacak Alanını Değiştirme Yektiniz Bulunmamaktadır..!{scr:İrsaliyedenFaturaOluşturmaEngelleme}");
+             ev.Cancel = true;
+            return null;
+        }
+    
+    
+}</ScriptText>
+</ScriptDefinition>

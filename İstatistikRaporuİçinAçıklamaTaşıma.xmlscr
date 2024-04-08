@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İstatistikRaporuİçinAçiklamaTaşima" Enabled="true" Priority="0" ScriptName="İstatistikRaporuİçinAçiklamaTaşima">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 04.05.2020 13:27:39
+function OnBeforePost(sender,eventArg){
+	if(BaseObject!=null &amp;&amp; BaseObject.CurrentRow!=null &amp;&amp; BaseObject.CurrentRow.Row!=null  &amp;&amp; BaseObject.CurrentRow.Row.RowState!=DataRowState.Deleted &amp;&amp; BaseObject.CurrentRow.Row.RowState!=DataRowState.Detached){
+		foreach(dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select("")){
+			if(dr.RowState!=DataRowState.Deleted &amp;&amp; dr.RowState!=DataRowState.Detached){
+				//UD_Fake burada ReceiptItem tablosuna açilan istastik açiklama alani için kullaniliyor.
+				dr.SetField&lt;|String|&gt;("UD_Fake",dr["Explanation"].ToString());
+			}
+		}
+	}
+}</ScriptText>
+</ScriptDefinition>

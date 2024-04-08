@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FisTarihiAktarma" Enabled="true" Priority="0" ScriptName="FisTarihiAktarma">
+  <Events>
+    <Event Enabled="true" ObjectName="OrderReceiptEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnBeforePost" ObjectName="OrderReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 5.10.2022 08:54:30
+// Fiş tarihini Order girişindeki  Müşteri İsteme tarihinine aktarma 
+function OnBeforePost(sender, ev)
+{    
+        
+   	if( BaseObject == null || BaseObject.CurrentRow == null || BaseObject.CurrentRow.Row == null )
+		return null;
+	
+	fis = BaseObject.CurrentRow.Row["ReceiptDate"].ToString();
+	date = Convert.ToDateTime(fis);
+    fis = date.ToString("MM-dd-yyyy");
+    fis+=" 00:00:00";
+    
+        foreach(loop in BaseObject.Data.Tables["IM_OrderReceiptItem"].Select("WorkOrderReceiptItemId is not null"))
+	{
+		orderid = loop["WorkOrderReceiptItemId"].ToString();
+		 x1=" select WorkOrderId from MA_WorkOrderItem as ma left join MA_WorkOrder as woi on ma.WorkOrderId=woi.RecId where ma.RecId= "+orderid;
+		 y1=UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "y1",x1); 
+		if(y1 != null &amp;&amp;y1.Rows.Count&gt;0)
+		{
+		  
+
+			workorderId = y1.Rows[0][0].ToString(); //14
+		
+			x2 ="update MA_WorkOrder set DeliveryDate=\'"+fis+"\' where RecId= "+workorderId;
+			UtilityFunctions.SqlCustomScalarQuery(BaseObject.Connection, BaseObject.Transaction,x2);
+
+			
+			
+		}
+		
+		
+	}
+           
+      
+}</ScriptText>
+</ScriptDefinition>

@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KilitliOrderKontrol" Enabled="true" Priority="0" ScriptName="KilitliOrderKontrol">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderVM" />
+    <Event Enabled="false" EventName="ViewLoaded" FunctionName="OnViewLoaded" ObjectName="TWorkOrderVM" />
+    <Event Enabled="true" EventName="ColumnChanged" FunctionName="OnColumnChanged" ObjectName="TWorkOrderEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 6.12.2023 17:41:21 KilitliOrderKontrol
+
+
+function OnViewLoaded(sender, e)
+{
+
+if(BaseObject.ActiveEntity == null 
+	|| BaseObject.ActiveEntity.CurrentRow == null 
+	|| BaseObject.ActiveEntity.CurrentRow.Row == null
+    || BaseObject.ActiveEntity.CurrentRow.Row.IsNull("IsLocked")
+    || Convert.ToInt32(BaseObject.ActiveEntity.CurrentRow.Row["IsLocked"]) == 0
+    )
+		return null;
+   
+        sender.ActiveEntity.ShowMessage("Kilitli Order Üzerinde İşlem Gerçekleştirmeyiniz..{scr:KilitliOrderKontrol}");
+}
+
+function OnColumnChanged(sender, ev)
+{
+	if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null 
+  	|| BaseObject.CurrentRow.Row.IsNull("IsLocked")
+    || Convert.ToInt32(BaseObject.CurrentRow.Row["IsLocked"]) == 0
+    )
+    return null;
+  
+   old_date="01.01.1900";
+		
+		if (ev.Row["UpdatedAt", DataRowVersion.Original] != DBNull.Value)
+			old_date = Convert.ToDateTime(ev.Row["UpdatedAt", DataRowVersion.Original]);
+
+	new_date="01.01.1900";
+
+		if (ev.Row["UpdatedAt"] != DBNull.Value)
+			new_date = Convert.ToDateTime(ev.Row["UpdatedAt"].ToString());
+if(old_date != new_date)
+	 MessageBox.Show("Kilitli Order Üzerinde İşlem Gerçekleştirmeyiniz..{scr:KilitliOrderKontrol}");	
+}
+</ScriptText>
+</ScriptDefinition>

@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyeSatırınaOrderVeCekiBilgisi" Enabled="true" Priority="0" ScriptName="İrsaliyeSatırınaOrderVeCekiBilgisi">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" ObjectName="TWorkOrderEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost2" ObjectName="TWorkOrderEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 17.01.2023 16:04:16
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null 
+	|| BaseObject.CurrentRow.Row.IsNull("ReceiptType")
+	|| Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"])!=120)
+	return null;
+	
+	OperationCode=String.Empty;
+	CustomerOrderNo=String.Empty;
+	PartOrderNo=String.Empty;
+		
+	foreach (dr in BaseObject.Data.Tables["IM_ReceiptItem"].Select("PackagingListItemId is not null"))
+	{
+		query="select wo.UD_Aciklama from  MA_WorkOrder wo left join MA_WorkOrderItem woi on wo.RecId=woi.WorkOrderId left join IM_PackagingListItem pli on pli.WorkOrderItemId=woi.RecId where  pli.RecId="+ dr ["PackagingListItemId"].ToString(); 
+		dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query);
+	
+		if(dt==null || dt.Rows.Count&lt;0)
+	return null;
+	
+	BaseObject.ShowMessage(dt.Rows[0][0].ToString());
+  dr.SetField&lt;|String|&gt;("UD_EInvoiceItemExplanation",dt.Rows[0][0].ToString());
+	
+	
+}
+}
+
+
+function OnBeforePost2(sender, ev)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null )
+	return null;
+	
+	Code=String.Empty;
+	CustomerOrderNo=String.Empty;
+	PartOrderNo=String.Empty;
+		foreach (dr in BaseObject.Data.Tables["MA_WorkOrderItem"].Select("RecId is not null and OrderItemGroupNo is not null "))
+	{
+	if(dr.IsNull("OperationCode"))
+	Code=" ";
+	
+	Code+=" "+dr["OperationCode"].ToString();
+	
+		if(dr.IsNull("CustomerOrderNo"))
+	CustomerOrderNo=" ";
+	
+	CustomerOrderNo+=" "+dr["CustomerOrderNo"].ToString();
+	
+		if(dr.IsNull("PartOrderNo"))
+	PartOrderNo=" ";
+	
+	PartOrderNo+=" "+dr["PartOrderNo"].ToString();
+
+}
+
+
+BaseObject.CurrentRow.Row.SetField&lt;|String|&gt;("UD_Aciklama","Renk: "+Code.ToString()+"Müşteri Numarası: "+CustomerOrderNo.ToString()+"Parti No: "+PartOrderNo.ToString());
+}</ScriptText>
+</ScriptDefinition>

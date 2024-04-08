@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="Fatura Fason Tip Kontrol" Enabled="true" Priority="0" ScriptName="Fatura Fason Tip Kontrol">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="ColumnChanged" FunctionName="OnColumnChanged" ObjectName="InvoiceEN" />
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 15.11.2016 10:34:55
+
+function OnColumnChanged(sender, eventArg)
+{
+	if (BaseObject!=null &amp;&amp; BaseObject.CurrentRow != null &amp;&amp; BaseObject.CurrentRow.Row != null &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("ReceiptType") &amp;&amp; Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"]) == 125 &amp;&amp; (BaseObject.CurrentRow.Row.IsNull("ReceiptSubType") || Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptSubType"]) == 0) &amp;&amp; (eventArg.Column.ColumnName == "CurrentAccountId" || eventArg.Column.ColumnName == "ReceiptDate" || eventArg.Column.ColumnName == "OutWarehouseId")) 
+		 BaseObject.ShowMessage("Fason tipi İŞLETME olamaz..");
+
+}
+
+function OnBeforePost(sender, eventArg)
+{
+	if (BaseObject!=null &amp;&amp; BaseObject.CurrentRow != null &amp;&amp; BaseObject.CurrentRow.Row != null &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("ReceiptType") &amp;&amp; Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptType"]) == 125 &amp;&amp; (BaseObject.CurrentRow.Row.IsNull("ReceiptSubType") || Convert.ToInt16(BaseObject.CurrentRow.Row["ReceiptSubType"]) == 0)) 
+	{
+		 eventArg.Cancel=true;
+		 BaseObject.ShowMessage("Fason tipi İŞLETME olamaz.");
+		 return null;
+	}
+}</ScriptText>
+</ScriptDefinition>

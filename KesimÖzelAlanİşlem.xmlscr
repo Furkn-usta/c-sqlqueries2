@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KesimÖzelAlanİşlem" Enabled="true" Priority="0" ScriptName="KesimÖzelAlanİşlem">
+  <Events>
+    <Event Enabled="true" ObjectName="TWorkOrderCuttingProductionEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="TWorkOrderCuttingProductionEN" />
+  </Events>
+  <Histories>
+    <History EditedBy="Furkan Usta" EntryDate="2023-11-03T00:00:00">
+      <Change />
+    </History>
+  </Histories>
+  <ScriptText>//Generated on 3.11.2023 09:12:28 KesimÖzelAlanİşlem
+
+function OnBeforePost(sender, ev)
+{
+	if(BaseObject == null 
+	|| BaseObject.CurrentRow == null 
+	|| BaseObject.CurrentRow.Row == null
+	|| BaseObject.CurrentRow.Row.IsNull("WorkOrderItemId")	
+	|| BaseObject.CurrentRow.Row.IsNull("UD_KullanilanKumasMik")
+    || BaseObject.CurrentRow.Row.IsNull("UD_ParcaKumasMik")
+    || BaseObject.CurrentRow.Row.IsNull("UD_RuloEksikFazla")
+    || BaseObject.CurrentRow.Row.IsNull("UD_EkstraSarf")
+    || BaseObject.CurrentRow.Row.IsNull("UD_KullanilanBiye")
+    || BaseObject.CurrentRow.Row.IsNull("UD_NumuneMik")
+    || BaseObject.CurrentRow.Row.IsNull("UD_HataliTasnif")
+    || BaseObject.CurrentRow.Row.IsNull("Quantity")
+    
+	
+	)
+	  return null; 
+
+		if(BaseObject.ActiveSession.Company.RecId == 1)
+		{
+		pross_id = 1;
+		}
+		else
+		{
+		pross_id = 430;
+		}
+			query ="select isnull((select sum(isnull(IA.Quantity,0)) from IM_ItemAllocation IA with (nolock) 						";
+			query +=" left join IM_ReceiptItem RI with (nolock) on RI.RecId=IA.InventoryReceiptItemId						";
+			query +=" left join MA_WorkOrderItem MWOI with (nolock) on MWOI.RecId=IA.WorkOrderItemId							";
+			query +=" where MWOI.RecId=WOI.RecId and RI.InventoryId=WOP.InventoryId and IA.InventoryReceiptType=1),0)[gln_kms_mik]";
+			query +=" ,isnull((select isnull(RI.Quantity,0) from MA_RecipeItem RI where RI.OwnerInventoryId=WO.InventoryId and WOP.InventoryId=RI.InventoryId),0) [net_sarf2]"; 
+			query +=" ,(select isnull(RI.Quantity,0) [net_sarf] from MA_RecipeItem RI with (nolock) where RI.WorkOrderReceiptId=WO.RecId and WOP.InventoryId=RI.InventoryId) [net_sarf]";
+			query +=" from MA_WorkOrder WO with (nolock)																		";
+			query +=" left join MA_WorkOrderItem WOI with (nolock) on WOI.WorkOrderId=WO.RecId and WOI.WorkOrderSubType=1	";
+			query +=" left join MA_WorkOrderItem WOII with (nolock) on WOII.WorkOrderId=WO.RecId and WOII.WorkOrderSubType=2 ";
+			query +=" left join MA_WorkOrderProduction WOP with (nolock) on WOP.WorkOrderItemId=WOI.RecId					";
+			query +=" where WOP.SubNo=WOII.SubNo																				";
+			query +=" and WOP.WorkOrderItemId=\'"+BaseObject.CurrentRow.Row["WorkOrderItemId"].ToString()+"\'				";
+			query +=" and WOP.ProductionType=100																				";
+			query +=" and WOP.ProcessId=\'"+pross_id.ToString()+"\'																					";
+			dt = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt",query.ToString());
+   			// MessageBox.Show(model_recete.ToString());
+    
+		    if(dt == null || dt.Rows.Count&lt;=0 )
+		    	return null;
+		     
+			gln_kms_mik_ = Convert.ToDecimal(dt.Rows[0]["gln_kms_mik"]);
+			net_sarf_ = Convert.ToDecimal(dt.Rows[0]["net_sarf"]);
+			BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("UD_GelenKumasMik",gln_kms_mik_);	
+	 	    kullanilan_kumas_miktari = Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_KullanilanKumasMik"]);	 	    
+	 	    parca_kumas_miktari = Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_ParcaKumasMik"]);
+	 	    hatali_kumas_miktari = Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_HataliKumasMik"]);
+	 	    rulo_eksik_fazla = Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_RuloEksikFazla"]);
+	 	    ekstra_sarf = Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_EkstraSarf"]);
+	 	    biye_kullanilan_miktari = Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_KullanilanBiye"]);
+	 	    numune_kullanilan_miktari = Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_NumuneMik"]);
+	 	    hatali_parca_degisimi = Convert.ToDecimal(BaseObject.CurrentRow.Row["UD_HataliTasnif"]);
+	 	    
+            kullanilan_top_mik = kullanilan_kumas_miktari+parca_kumas_miktari+hatali_kumas_miktari+rulo_eksik_fazla+ekstra_sarf+biye_kullanilan_miktari+numune_kullanilan_miktari+hatali_parca_degisimi;
+
+            BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("UD_KullanilanToplamMiktar",kullanilan_top_mik);		
+            kalan_kumas_miktari = gln_kms_mik_ - kullanilan_top_mik;
+            BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("UD_KalanKumasMik",kalan_kumas_miktari);	
+            
+            	if(Convert.ToDecimal(BaseObject.CurrentRow.Row["Quantity"]) != 0)
+            	{
+            		gercek_sarf = kullanilan_top_mik / Convert.ToDecimal(BaseObject.CurrentRow.Row["Quantity"]);
+            	}
+            	else 
+            	{
+            		gercek_sarf=0;
+				} 
+				/*           		
+            	MessageBox.Show(kullanilan_top_mik.ToString());
+            	MessageBox.Show(BaseObject.CurrentRow.Row["Quantity"].ToString());
+            	*/
+            	
+            BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("UD_GercekSarfiyat",gercek_sarf);	
+            BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("UD_NetSarfiyat",net_sarf_);
+            if(gercek_sarf !=0)	
+            {
+            yuzde_artis = ((gercek_sarf - net_sarf_)/gercek_sarf)*100;
+            BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("UD_YuzdeArtis",yuzde_artis);
+            
+            }
+            else
+            {
+            yuzde_artis =0;
+            BaseObject.CurrentRow.Row.SetField&lt;|decimal|&gt;("UD_YuzdeArtis",yuzde_artis);
+            
+            }
+           
+      // g_gramaj=agirlik+tot_mik;
+   	  // BaseObject.CurrentRow.Row.SetField&lt;|string|&gt;("Explanation",g_gramaj.ToString());
+}</ScriptText>
+</ScriptDefinition>

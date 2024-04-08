@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KesimİşEmriMiktarVeTedarikKontrol" Enabled="true" Priority="1" ScriptName="KesimİşEmriMiktarVeTedarikKontrol">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 25.07.2023 08:50:00   650402.1		K-1002001400	KesimİşEmriMiktarVeTedarikKontrol	KesimİşEmriMiktarVeTedarikKontrol	1	True
+function OnBeforePost(sender, ev)
+{
+if( BaseObject == null 
+|| BaseObject.CurrentRow == null 
+|| BaseObject.CurrentRow.Row == null
+|| BaseObject.CurrentRow.Row.IsNull("ReceiptType")
+|| BaseObject.CurrentRow.Row.IsNull("AccessCode")
+|| BaseObject.CurrentRow.Row["AccessCode"].ToString() != "FABRIC")
+		return null;
+
+if(Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"]) == 40 
+|| Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"]) == 1
+|| Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"]) == 16 
+|| Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"]) == 122)
+
+{
+
+if(Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"]) == 122)
+{
+foreach(ia in BaseObject.Data.Tables["IM_ItemAllocation"].Select("InventoryReceiptItemId is not null"))
+        	{   
+        	
+            	ia_req_group = ia["RequirementGroup"].ToString();
+                query =" select isnull(IA.RequirementGroup,\'\') [req_gr] ,(ROW_NUMBER() OVER(PARTITION BY RI.RecId ORDER BY RI.RecId ASC) ) [sira]  ,IA.RecId [allocationId] from IM_ItemAllocation IA with (nolock) ";
+                query += " left join IM_ReceiptItem RI with (nolock) on RI.RecId=IA.InventoryReceiptItemId ";
+                query += " left join IM_Receipt R with (nolock) on R.RecId=RI.InventoryReceiptId ";
+                query += " where RI.RecId=\'"+ia["InventoryReceiptItemId"].ToString()+"\'";
+               
+                dt_query_ = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_query_",query);
+                if(dt_query_==null || dt_query_.Rows.Count&lt;0)
+                    return null;
+                    
+                 count_ = Convert.ToInt32(dt_query_.Rows.Count);
+                    for(i=1;i&lt;=count_; i++)
+                    {
+                    	    query2 =" select X.req_gr [req_gr] ,X.allocationId [all_id],X.sira [sira] ,X.[ia_quantity] ,X.[ion] from (select isnull(IA.RequirementGroup,\'\') [req_gr] ,RI.ItemOrderNo [ion],(ROW_NUMBER() OVER(PARTITION BY RI.RecId ORDER BY RI.RecId ASC) ) [sira]  ,IA.RecId [allocationId]  ,IA.Quantity [ia_quantity] from IM_ItemAllocation IA with (nolock) ";
+			                query2 += " left join IM_ReceiptItem RI with (nolock) on RI.RecId=IA.InventoryReceiptItemId ";
+			                query2 += " left join IM_Receipt R with (nolock) on R.RecId=RI.InventoryReceiptId ";
+			                query2 += " where RI.RecId=\'"+ia["InventoryReceiptItemId"].ToString()+"\')X where X.sira=\'"+i.ToString()+"\'"  ;
+			                dt_query2_ = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_query2_",query2);
+			                if(dt_query2_==null || dt_query2_.Rows.Count&lt;0)
+			                    return null;       
+			                MessageBox.Show(query2.ToString());
+
+			                requirementGroup = dt_query2_.Rows[0]["req_gr"].ToString();
+			                allocationId = dt_query2_.Rows[0]["all_id"].ToString();
+                            row_count = dt_query2_.Rows[0]["ion"].ToString();
+                            ia_sira  = dt_query2_.Rows[0]["sira"].ToString();
+			                cuting_query = " select * from ( select (select ";
+                            cuting_query += " (select WIC.RequirementGroup from MA_WorkOrderItem WIC with (nolock) where WIC.WorkOrderId = (select WI.WorkOrderId from MA_WorkOrderItem WI with (nolock) where WI.RecId = WOP.WorkOrderItemId) and WIC.WorkOrderSubType = 2 and WIC.SubNo=WOP.SubNo and WIC.ParentItemId is null) RequirementGroup ";
+                            cuting_query += " from MA_WorkOrderProduction WOPP with (nolock) where WOPP.RecId=WOP.RecId) [requirementGroup] ,WOPR.Quantity [cut_quantity] ,AllocationId AllocationId from MA_WorkOrder WO with (nolock) ";
+                            cuting_query += " left join MA_WorkOrderItem WOI  with (nolock) on WOI.WorkOrderId=WO.RecId ";
+                            cuting_query += " left join MA_WorkOrderProduction WOP  with (nolock) on WOP.WorkOrderItemId=WOI.RecId ";
+                            cuting_query += " left join MA_WorkOrderProductionReceipt WOPR  with (nolock) on WOPR.WorkOrderProductionId=WOP.RecId ";
+                            cuting_query += " )X  where X.AllocationId =  (select IA.RecId from IM_ItemAllocation IA where  IA.InventoryReceiptItemId = (select RI.ReturnReceiptItemId from IM_Receipt R ";
+                            cuting_query += "  left join IM_ReceiptItem RI on RI.InventoryReceiptId=R.RecId where RI.RecId=\'"+ia["InventoryReceiptItemId"].ToString()+"\'))";
+
+                            MessageBox.Show(cuting_query.ToString());
+                             dt_cuting_query_ = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_cuting_query_",cuting_query);
+			               
+			                if(dt_cuting_query_!=null &amp;&amp; dt_cuting_query_.Rows.Count&gt;0)
+			                
+			                {
+			                if(ia["UD_ItemAllocationNo"].ToString() == ia_sira.ToString() )
+			                {
+                                if(ia_req_group.ToString() != dt_cuting_query_.Rows[0]["RequirementGroup"].ToString())
+                                {
+                                MessageBox.Show(ia_req_group.ToString());
+                                    sender.ShowMessage(row_count.ToString()+". Sıranın Tedarik Grubu Kesim İş Emrindeki Tedarik Grubundan Farklı Kesim İş Emri Silinmeden Tedarik Grubu Değiştirilemez..! {scr..KesimİşEmriMiktarVeTedarikKontrol}");
+                                    ev.Cancel=true;
+                                    return null;
+                                }
+                                else 
+                                {
+                                    if(Convert.ToDecimal(ia["Quantity"]) &lt; Convert.ToDecimal(dt_cuting_query_.Rows[0]["cut_quantity"]))
+                                    {
+                                    sender.ShowMessage(row_count.ToString()+". Sıranın Tahsis Miktarı Kesim İş Emri Miktarından Küçüktür. Kesim İş Emri Miktarını Düzenleyiniz..! {scr..KesimİşEmriMiktarVeTedarikKontrol}");                                    
+                                    ev.Cancel=true;
+                                    return null;
+                                    }
+                                }
+                           }
+
+                           }
+                    }
+               
+               
+
+        }
+}
+
+
+else 
+
+
+{
+    
+           	foreach(ia in BaseObject.Data.Tables["IM_ItemAllocation"].Select("InventoryReceiptItemId is not null"))
+        	{   
+        	
+            	ia_req_group = ia["RequirementGroup"].ToString();
+                query =" select isnull(IA.RequirementGroup,\'\') [req_gr] ,(ROW_NUMBER() OVER(PARTITION BY RI.RecId ORDER BY RI.RecId ASC) ) [sira]  ,IA.RecId [allocationId] from IM_ItemAllocation IA with (nolock) ";
+                query += " left join IM_ReceiptItem RI with (nolock) on RI.RecId=IA.InventoryReceiptItemId ";
+                query += " left join IM_Receipt R with (nolock) on R.RecId=RI.InventoryReceiptId ";
+                query += " where RI.RecId=\'"+ia["InventoryReceiptItemId"].ToString()+"\'";
+               
+                dt_query_ = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_query_",query);
+                if(dt_query_==null || dt_query_.Rows.Count&lt;0)
+                    return null;
+                    
+                 count_ = Convert.ToInt32(dt_query_.Rows.Count);
+                    for(i=1;i&lt;=count_; i++)
+                    {
+                    	    query2 =" select X.req_gr [req_gr] ,X.allocationId [all_id],X.sira [sira] ,X.[ia_quantity] ,X.[ion] from (select isnull(IA.RequirementGroup,\'\') [req_gr] ,RI.ItemOrderNo [ion],(ROW_NUMBER() OVER(PARTITION BY RI.RecId ORDER BY RI.RecId ASC) ) [sira]  ,IA.RecId [allocationId]  ,IA.Quantity [ia_quantity] from IM_ItemAllocation IA with (nolock) ";
+			                query2 += " left join IM_ReceiptItem RI with (nolock) on RI.RecId=IA.InventoryReceiptItemId ";
+			                query2 += " left join IM_Receipt R with (nolock) on R.RecId=RI.InventoryReceiptId ";
+			                query2 += " where RI.RecId=\'"+ia["InventoryReceiptItemId"].ToString()+"\')X where X.sira=\'"+i.ToString()+"\'"  ;
+			                dt_query2_ = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_query2_",query2);
+			                if(dt_query2_==null || dt_query2_.Rows.Count&lt;0)
+			                    return null;       
+			                MessageBox.Show(query2.ToString());
+
+			                requirementGroup = dt_query2_.Rows[0]["req_gr"].ToString();
+			                allocationId = dt_query2_.Rows[0]["all_id"].ToString();
+                            row_count = dt_query2_.Rows[0]["ion"].ToString();
+                            ia_sira  = dt_query2_.Rows[0]["sira"].ToString();
+			                cuting_query = " select (select ";
+                            cuting_query += " (select WIC.RequirementGroup from MA_WorkOrderItem WIC with (nolock) where WIC.WorkOrderId = (select WI.WorkOrderId from MA_WorkOrderItem WI with (nolock) where WI.RecId = WOP.WorkOrderItemId) and WIC.WorkOrderSubType = 2 and WIC.SubNo=WOP.SubNo and WIC.ParentItemId is null) RequirementGroup ";
+                            cuting_query += " from MA_WorkOrderProduction WOPP with (nolock) where WOPP.RecId=WOP.RecId) [requirementGroup] ,WOPR.Quantity [cut_quantity]from MA_WorkOrder WO with (nolock) ";
+                            cuting_query += " left join MA_WorkOrderItem WOI  with (nolock) on WOI.WorkOrderId=WO.RecId ";
+                            cuting_query += " left join MA_WorkOrderProduction WOP  with (nolock) on WOP.WorkOrderItemId=WOI.RecId ";
+                            cuting_query += " left join MA_WorkOrderProductionReceipt WOPR  with (nolock) on WOPR.WorkOrderProductionId=WOP.RecId ";
+                            cuting_query += " where WOPR.AllocationId in (\'"+allocationId.ToString()+"\')";
+                            MessageBox.Show(cuting_query.ToString());
+                             dt_cuting_query_ = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_cuting_query_",cuting_query);
+			               
+			                if(dt_cuting_query_!=null &amp;&amp; dt_cuting_query_.Rows.Count&gt;0)
+			                
+			                {
+			                if(ia["UD_ItemAllocationNo"].ToString() == ia_sira.ToString() )
+			                {
+                                if(ia_req_group.ToString() != dt_cuting_query_.Rows[0]["RequirementGroup"].ToString())
+                                {
+                                MessageBox.Show(ia_req_group.ToString());
+                                    sender.ShowMessage(row_count.ToString()+". Sıranın Tedarik Grubu Kesim İş Emrindeki Tedarik Grubundan Farklı Kesim İş Emri Silinmeden Tedarik Grubu Değiştirilemez..! {scr..KesimİşEmriMiktarVeTedarikKontrol}");
+                                    ev.Cancel=true;
+                                    return null;
+                                }
+                                else 
+                                {
+                                    if(Convert.ToDecimal(ia["Quantity"]) &lt; Convert.ToDecimal(dt_cuting_query_.Rows[0]["cut_quantity"]))
+                                    {
+                                    sender.ShowMessage(row_count.ToString()+". Sıranın Tahsis Miktarı Kesim İş Emri Miktarından Küçüktür. Kesim İş Emri Miktarını Düzenleyiniz..! {scr..KesimİşEmriMiktarVeTedarikKontrol}");                                    
+                                    ev.Cancel=true;
+                                    return null;
+                                    }
+                                }
+                           }
+
+                           }
+                    }
+               
+               
+
+        }
+     }
+        }
+        
+ 
+}
+</ScriptText>
+</ScriptDefinition>

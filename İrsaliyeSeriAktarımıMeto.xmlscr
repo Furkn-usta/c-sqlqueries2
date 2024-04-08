@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="İrsaliyeSeriAktarımıMeto" Enabled="true" Priority="0" ScriptName="İrsaliyeSeriAktarımıMeto">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryReceiptEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="InventoryReceiptEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 9.01.2024 16:11:50 İrsaliyeSeriAktarımıMeto 
+function OnAfterSucceededPost(sender, ev)
+{
+if(BaseObject==null 
+	|| BaseObject.CurrentRow==null
+	|| BaseObject.CurrentRow.Row==null)
+		return null;
+
+	foreach(ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("RecId is not null"))
+	{
+		mSerialTransaction = BaseObject.Data.Tables["IM_SerialTransaction"].Select(String.Format("ReceiptItemId = {0}", ri["RecId"])).FirstOrDefault&lt;|DataRow|&gt;();
+			
+            	str = "update IM_SerialCard set UD_SeriKartÖzelAlan=\'"+ri["UD_İrsaliyeÖzelAlan"]+"\' where RecId =\'"+mSerialTransaction["SerialCardId"].ToString()+"\')";
+                
+	            UtilityFunctions.SqlCustomScalarQuery(BaseObject.Connection,null,str.ToString());
+			
+	}
+}</ScriptText>
+</ScriptDefinition>

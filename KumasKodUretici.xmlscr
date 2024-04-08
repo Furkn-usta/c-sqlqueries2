@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="KumasKodUretici" Enabled="true" Priority="0" ScriptName="KumasKodUretici">
+  <Events>
+    <Event Enabled="true" ObjectName="InventoryEN" />
+    <Event Enabled="true" EventName="BeforePost" FunctionName="OnBeforePost" ObjectName="InventoryEN" />
+  </Events>
+  <Histories />
+  <ScriptText>// Selcan-Halil Flomak Kumas kartinda Grup kodu K-Kumas Secildigi zaman Urun Koduna otomatik  kod ureten script.
+function OnBeforePost (sender ,eventArg){
+	if(BaseObject!=null 
+	   &amp;&amp; BaseObject.CurrentRow!=null 
+	   &amp;&amp; BaseObject.CurrentRow.Row!=null
+	   &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("AccessCode")
+	   &amp;&amp; BaseObject.CurrentRow.Row["AccessCode"].ToString()== "FABRIC"
+	   &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("GroupId")
+	   &amp;&amp; (Convert.ToInt16(BaseObject.CurrentRow.Row["GroupId"]) == 10104 
+	       || Convert.ToInt16(BaseObject.CurrentRow.Row["GroupId"]) == 10054)
+	   &amp;&amp; BaseObject.IsNewRecord
+	   )
+	 {
+	 	if(Convert.ToInt16(BaseObject.CurrentRow.Row["GroupId"]) == 10054 
+	 	&amp;&amp;(BaseObject.CurrentRow.Row.IsNull("UD_iplikno") || BaseObject.CurrentRow.Row["UD_iplikno"].ToString().Trim()=="")
+	 	&amp;&amp; (BaseObject.CurrentRow.Row.IsNull("UD_ElyafCinsi") || BaseObject.CurrentRow.Row["UD_ElyafCinsi"].ToString().Trim()=="")
+	 	&amp;&amp; (BaseObject.CurrentRow.Row.IsNull("UD_Elastan") || BaseObject.CurrentRow.Row["UD_Elastan"].ToString().Trim()=="")
+	 	&amp;&amp; (BaseObject.CurrentRow.Row.IsNull("UD_OrguCinsi") || BaseObject.CurrentRow.Row["UD_OrguCinsi"].ToString().Trim()=="")
+	 	&amp;&amp; (BaseObject.CurrentRow.Row.IsNull("UD_TexDetay") || BaseObject.CurrentRow.Row["UD_TexDetay"].ToString().Trim()=="") ){
+		        sender.ShowMessage("K-Kumas icin zorunlu alanlari giriniz !");
+				eventArg.Cancel=true;
+			    return null;
+        
+    }
+    else {
+     str="select isnull(max(isnull(UD_Sayac,0)),0)+1 Sayac from  IM_Item with (nolock) where AccessCode=\'FABRIC\' and GroupId is not null and CompanyId="+BaseObject.ActiveSession.Company.RecId;
+       dt1 = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt1", str);
+       if(dt1!=null 
+	       &amp;&amp; dt1.Rows.Count&gt;0 
+	       &amp;&amp; !dt1.Rows[0].IsNull("Sayac")
+	       &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("UD_iplikno")
+	       &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("UD_ElyafCinsi")                         
+	       &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("UD_Elastan")                      
+	       &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("UD_OrguCinsi")                             
+	       &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("UD_TexDetay") )
+       {
+                       	
+		  code = "TEX-"+String.Format("{0:0000}",Convert.ToInt32(dt1.Rows[0]["Sayac"]));
+		  str2="select top 1 Explanation from MD_DataFieldValue where CodeValue=\'"+ BaseObject.CurrentRow.Row["UD_iplikno"].ToString()+"\' and FieldId =(select RecId from MD_DataField with (nolock) where TableName=\'IM_Item\' and FieldName=\'UD_iplikno\')";
+		  dt2 = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt2", str2);
+          iplik = string.Empty;
+          if(dt2!=null  &amp;&amp; dt2.Rows.Count&gt;0 &amp;&amp; !dt2.Rows[0].IsNull("Explanation") ){
+            iplik =dt2.Rows[0]["Explanation"].ToString();
+          }  
+		  str3="select top 1 Explanation from MD_DataFieldValue where CodeValue=\'"+ BaseObject.CurrentRow.Row["UD_ElyafCinsi"].ToString()+"\' and FieldId =(select RecId from MD_DataField with (nolock) where TableName=\'IM_Item\' and FieldName=\'UD_ElyafCinsi\')";
+		  dt3 = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt3", str3);
+          elyaf = string.Empty;
+          if(dt3!=null  &amp;&amp; dt3.Rows.Count&gt;0 &amp;&amp; !dt3.Rows[0].IsNull("Explanation")  ){
+            elyaf =dt3.Rows[0]["Explanation"].ToString();
+          }  		  
+		  str4="select top 1 Explanation from MD_DataFieldValue where CodeValue=\'"+ BaseObject.CurrentRow.Row["UD_Elastan"].ToString()+"\' and FieldId =(select RecId from MD_DataField with (nolock) where TableName=\'IM_Item\' and FieldName=\'UD_Elastan\')";
+		  dt4 = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt4", str4);
+          elas = string.Empty;
+          if(dt4!=null &amp;&amp; dt4.Rows.Count&gt;0 &amp;&amp; !dt4.Rows[0].IsNull("Explanation") ){
+             elas =dt4.Rows[0]["Explanation"].ToString();
+          } 
+		  str5="select top 1 Explanation from MD_DataFieldValue where CodeValue=\'"+ BaseObject.CurrentRow.Row["UD_OrguCinsi"].ToString()+"\' and FieldId =(select RecId from MD_DataField with (nolock) where TableName=\'IM_Item\' and FieldName=\'UD_OrguCinsi\')";
+		  dt5 = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt5", str5);
+          orgu = string.Empty;
+          if(dt5!=null &amp;&amp; dt5.Rows.Count&gt;0 &amp;&amp; !dt5.Rows[0].IsNull("Explanation") ){
+            orgu =dt5.Rows[0]["Explanation"].ToString();
+          } 
+	     
+	      str6="select top 1 Explanation from MD_DataFieldValue where CodeValue=\'"+ BaseObject.CurrentRow.Row["UD_TexDetay"].ToString()+"\' and FieldId =(select RecId from MD_DataField with (nolock) where TableName=\'IM_Item\' and FieldName=\'UD_TexDetay\')";
+          dt6 = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt6", str6);
+          texdetay = string.Empty;
+          if(dt6!=null &amp;&amp; dt6.Rows.Count&gt;0 &amp;&amp; !dt6.Rows[0].IsNull("Explanation")  ){
+            texdetay =dt6.Rows[0]["Explanation"].ToString();
+          }        
+
+           adi =iplik+" "+elyaf+" "+elas+" "+orgu+" "+texdetay;
+           BaseObject.CurrentRow.Row.SetField&lt;|String|&gt;("InventoryCode",code);
+           BaseObject.CurrentRow.Row.SetField&lt;|String|&gt;("InventoryName",adi);
+           BaseObject.CurrentRow.Row.SetField&lt;|int|&gt;("UD_Sayac",Convert.ToInt32(dt1.Rows[0]["Sayac"]));
+           
+
+		 }
+    
+    }
+	 
+	 
+	 
+      
+         	if(Convert.ToInt16(BaseObject.CurrentRow.Row["GroupId"]) == 10104
+	    &amp;&amp; (BaseObject.CurrentRow.Row.IsNull("FWidth") || Convert.ToDecimal(BaseObject.CurrentRow.Row["FWidth"])==0m)
+	 	&amp;&amp; (BaseObject.CurrentRow.Row.IsNull("FWeight") || Convert.ToDecimal(BaseObject.CurrentRow.Row["FWeight"])==0m)
+	 	&amp;&amp; (BaseObject.CurrentRow.Row.IsNull("UD_MedKatsayi") || BaseObject.CurrentRow.Row["UD_MedKatsayi"].ToString().Trim()=="")
+	 	&amp;&amp; (BaseObject.CurrentRow.Row.IsNull("UD_Islem1") || BaseObject.CurrentRow.Row["UD_Islem1"].ToString().Trim()=="")
+	 	&amp;&amp; (BaseObject.CurrentRow.Row.IsNull("UD_Islem2") || BaseObject.CurrentRow.Row["UD_Islem2"].ToString().Trim()=="") 
+	 	&amp;&amp; (BaseObject.CurrentRow.Row.IsNull("UD_MedKalite") || BaseObject.CurrentRow.Row["UD_MedKalite"].ToString().Trim()=="")){
+		        sender.ShowMessage("M-Medikal icin zorunlu alanlari giriniz !");
+				eventArg.Cancel=true;
+			    return null;
+        
+    }
+    else
+  	  {
+  	   str7="select isnull(max(isnull(UD_Sayac2,0)),0)+1 Sayac2 from  IM_Item with (nolock) where AccessCode=\'FABRIC\' and CompanyId="+BaseObject.ActiveSession.Company.RecId;
+          dt7 = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt7", str7);
+          if(dt7!=null 
+          &amp;&amp; dt7.Rows.Count&gt;0 
+          &amp;&amp;Convert.ToInt16(BaseObject.CurrentRow.Row["GroupId"]) == 10104
+          &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("FWidth")
+          &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("FWeight")
+          &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("UD_MedKatsayi")
+          &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("UD_Islem1")
+          &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("UD_Islem2")
+          &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("UD_MedKalite") ){
+          
+          
+       	  	 en =BaseObject.CurrentRow.Row["FWidth"].ToString();
+             boy =BaseObject.CurrentRow.Row["FWeight"].ToString();
+           
+		  str10="select top 1 Explanation from MD_DataFieldValue where CodeValue=\'"+ BaseObject.CurrentRow.Row["UD_MedKatsayi"].ToString()+"\' and FieldId =(select RecId from MD_DataField with (nolock) where TableName=\'IM_Item\' and FieldName=\'UD_MedKatsayi\')";
+		  dt10 = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt10", str10); 
+		      if(dt10!=null 
+           &amp;&amp; dt10.Rows.Count&gt;0 ){
+             medkat =dt10.Rows[0]["Explanation"].ToString();
+           }     
+		  str11="select top 1 Explanation from MD_DataFieldValue where CodeValue=\'"+ BaseObject.CurrentRow.Row["UD_Islem1"].ToString()+"\' and FieldId =(select RecId from MD_DataField with (nolock) where TableName=\'IM_Item\' and FieldName=\'UD_Islem1\')";
+		  dt11 = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt11", str11);
+		     if(dt11!=null 
+           &amp;&amp; dt11.Rows.Count&gt;0 ){
+            islem =dt11.Rows[0]["Explanation"].ToString();
+           }     
+		  str12="select top 1 Explanation from MD_DataFieldValue where CodeValue=\'"+ BaseObject.CurrentRow.Row["UD_Islem2"].ToString()+"\' and FieldId =(select RecId from MD_DataField with (nolock) where TableName=\'IM_Item\' and FieldName=\'UD_Islem2\')";
+          dt12 = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt12", str12);
+              if(dt12!=null 
+           &amp;&amp; dt12.Rows.Count&gt;0 ){
+            islem2 =dt12.Rows[0]["Explanation"].ToString();
+           }  
+          str13="select top 1 Explanation from MD_DataFieldValue where CodeValue=\'"+ BaseObject.CurrentRow.Row["UD_MedKalite"].ToString()+"\' and FieldId =(select RecId from MD_DataField with (nolock) where TableName=\'IM_Item\' and FieldName=\'UD_MedKalite\')";
+          dt13 = UtilityFunctions.GetDataTableList(BaseObject.ActiveSession.DBInfo.DBProvider, BaseObject.ActiveSession.DBInfo.Connection, null, "dt13", str13);
+                if(dt13!=null 
+           &amp;&amp; dt13.Rows.Count&gt;0 ){
+            medkal =dt13.Rows[0]["Explanation"].ToString();
+           }     
+
+      
+           adi =en+" EN "+boy+" G "+medkat+" "+islem+" "+islem2+" "+medkal;
+           code = "MED-"+String.Format("{0:0000}",Convert.ToInt32(dt7.Rows[0]["Sayac2"]));
+           BaseObject.CurrentRow.Row.SetField&lt;|String|&gt;("InventoryCode",code);
+           BaseObject.CurrentRow.Row.SetField&lt;|String|&gt;("InventoryName",adi);
+           BaseObject.CurrentRow.Row.SetField&lt;|int|&gt;("UD_Sayac2",Convert.ToInt32(dt7.Rows[0]["Sayac2"]));
+           
+      }
+		 
+                
+    }                  
+  } 
+ 	else if(BaseObject!=null 
+	   &amp;&amp; BaseObject.CurrentRow!=null 
+	   &amp;&amp; BaseObject.CurrentRow.Row!=null
+	   &amp;&amp; !BaseObject.CurrentRow.Row.IsNull("AccessCode")
+	   &amp;&amp; BaseObject.CurrentRow.Row["AccessCode"].ToString()== "FABRIC"
+	   &amp;&amp; BaseObject.IsNewRecord
+	   )
+ 	     {
+ 	    sender.ShowMessage("Grup Seciniz !");
+		eventArg.Cancel=true;
+	    return null; 
+	     } 
+}     
+</ScriptText>
+</ScriptDefinition>

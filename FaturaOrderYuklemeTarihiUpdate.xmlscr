@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<ScriptDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Description="FaturaOrderYuklemeTarihiUpdate" Enabled="true" Priority="0" ScriptName="FaturaOrderYuklemeTarihiUpdate">
+  <Events>
+    <Event Enabled="true" ObjectName="InvoiceEN" />
+    <Event Enabled="true" EventName="AfterSucceededPost" FunctionName="OnAfterSucceededPost" ObjectName="InvoiceEN" />
+  </Events>
+  <Histories />
+  <ScriptText>//Generated on 7.03.2024 15:24:56 FaturaOrderYuklemeTarihiUpdate
+
+function OnAfterSucceededPost(sender, ev)
+{
+	if(BaseObject == null 
+    || BaseObject.CurrentRow == null 
+    || BaseObject.CurrentRow.Row == null
+    || BaseObject.CurrentRow.Row.IsNull("ReceiptType")
+	|| BaseObject.CurrentRow.Row.IsNull("ReceiptDate")
+	|| Convert.ToInt32(BaseObject.CurrentRow.Row["ReceiptType"]) != 120
+	)
+		return null;
+	
+	date_ = Convert.ToDateTime(BaseObject.CurrentRow.Row["ReceiptDate"]);
+//	MessageBox.Show(date_.ToString());
+	sb = new StringBuilder();
+	foreach(ri in BaseObject.Data.Tables["IM_ReceiptItem"].Select("WorkOrderReceiptItemId is not null"))
+            {
+			sb.Clear();
+			sb.AppendLine("select isnull(WO.RecId,0)[wo_rec] from MA_WorkOrder WO with (nolock) ");
+			sb.AppendLine("left join MA_WorkOrderItem WOI with (nolock) on WOI.WorkOrderId=WO.RecId");
+			sb.AppendLine("where WOI.WorkOrderSubType=1 and WOI.RecId=\'"+ri["WorkOrderReceiptItemId"].ToString()+"\'");
+			dt_sb = UtilityFunctions.GetDataTableList(BaseObject.Provider, BaseObject.Connection, BaseObject.Transaction, "dt_sb",sb.ToString());
+                 if(dt_sb != null &amp;&amp; dt_sb.Rows.Count &gt; 0)
+                        {
+                            wo_rec_ = dt_sb.Rows[0]["wo_rec"].ToString();
+							update_sorgu ="update MA_WorkOrder set ShipmentDate=convert(datetime,\'"+date_.ToString()+"\',104) where RecId=\'"+wo_rec_.ToString()+"\'";
+							  // MessageBox.Show(update_sorgu.ToString());
+                    		UtilityFunctions.SqlCustomScalarQuery(BaseObject.Connection,null,update_sorgu.ToString());   
+                        }   
+			}
+}
+
+</ScriptText>
+</ScriptDefinition>
